@@ -53,6 +53,7 @@ dependencies = [
   "pyyaml",
   "scipy",
   "torch",
+  "astra-toolbox",
 ]
 
 dynamic = [
