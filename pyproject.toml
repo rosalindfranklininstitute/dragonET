@@ -3,7 +3,11 @@
 #
 [build-system]
 
-requires = ["setuptools", "setuptools-scm", "wheel"]
+requires = [
+  "setuptools",
+  "setuptools-scm",
+  "wheel",
+]
 build-backend = "setuptools.build_meta"
 
 #
@@ -20,7 +24,7 @@ readme = "README.md"
 
 requires-python = ">=3.6"
 
-license = {file = "LICENSE"}
+license = { file = "LICENSE" }
 
 keywords = [
   "dragonET",
@@ -29,7 +33,7 @@ keywords = [
 ]
 
 authors = [
-  {name = "James Parkhurst", email = "james.parkhurst@diamond.ac.uk" }
+  { name = "James Parkhurst", email = "james.parkhurst@diamond.ac.uk" },
 ]
 
 classifiers = [
@@ -57,7 +61,7 @@ dependencies = [
 ]
 
 dynamic = [
-  "version"
+  "version",
 ]
 
 #
@@ -106,14 +110,16 @@ test = [
 #
 [tool.setuptools.packages.find]
 
-where = ["src"]
+where = [
+  "src",
+]
 
 #
 # Set the package version from git tag
 #
 [tool.setuptools.dynamic]
 
-version = {attr = "dragonET._version.__version__"}
+version = { attr = "dragonET._version.__version__" }
 
 #
 # Configure setuptools-scm to generate version file
@@ -129,4 +135,6 @@ write_to = "src/dragonET/_version.py"
 
 addopts = "--cov=src --cov-report term --cov-report html"
 
-testpaths = [ "tests" ]
+testpaths = [
+  "tests",
+]
