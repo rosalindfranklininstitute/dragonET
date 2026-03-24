@@ -1,42 +1,56 @@
-FROM nvidia/cuda:12.6.0-devel-ubuntu24.04
+# Install uv
+FROM python:3.12-slim AS builder
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy UV_SYSTEM_PYTHON=1
+
+# Omit development dependencies
+ENV UV_NO_DEV=1
+
+# Configure the Python directory so it is consistent
+ENV UV_PYTHON_INSTALL_DIR=/python
+
+# Only use the managed Python version
+ENV UV_PYTHON_PREFERENCE=only-managed
+
+RUN apt update
+RUN apt install -y git
+
+WORKDIR /app
+
+RUN git submodule update --init --recursive
+
+# Install dependencies
+RUN --mount=type=cache,target=/root/.cache/uv \
+  --mount=type=bind,source=uv.lock,target=uv.lock \
+  --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+  uv sync --locked --no-install-project --no-editable
+
+# Copy the project into the intermediate image
+COPY . /app
+
+# Sync the project
+RUN --mount=type=cache,target=/root/.cache/uv \
+  uv sync --locked --no-editable
+
+FROM nvidia/cuda:11.8.0-devel-ubuntu22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-WORKDIR /app
-COPY . .
+# Setup a non-root user
+RUN groupadd --system --gid 999 nonroot \
+  && useradd --system --gid 999 --uid 999 --create-home nonroot
 
-RUN apt update
-RUN apt install -y \
-  git \
-  libfftw3-dev \
-  g++ \
-  python3 \
-  python3-pip \
-  python-is-python3 \
-  python3-venv \
-  automake \
-  libtool \
-  fontconfig \
-  mesa-utils \
-  qt6-base-dev \
-  libc6 \
-  libxcb-cursor0 \
-  libxcb-xinerama0
+# Copy the Python version
+COPY --from=builder /python /python
 
-ENV VIRTUAL_ENV=/opt/venv
-RUN python3 -m venv $VIRTUAL_ENV
-ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+# Copy the environment, but not the source code
+COPY --from=builder --chown=nonroot:nonroot /app/.venv /app/.venv
 
-RUN pip install \
-  numpy \
-  cython \
-  six \
-  scipy \
-  torch
+# Place executables in the environment at the front of the path
+ENV PATH /app/venv/bin:$PATH
+
+# Use the non-root user to run our application
+USER nonroot
 
 WORKDIR /app
-RUN export CXX=$(which g++)
-RUN export CUDACXX=$(which nvcc)
-RUN git submodule update --init --recursive
-RUN pip install --upgrade pip
-RUN pip install .
