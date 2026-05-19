@@ -16,7 +16,6 @@ import scipy.optimize
 import scipy.signal
 import yaml
 
-# from matplotlib import pylab
 from scipy.spatial.transform import Rotation
 from skimage.measure import ransac
 from skimage.transform import EuclideanTransform
@@ -413,15 +412,6 @@ def _propagate(predicted, observed, image_mask, octave, data_initial):
             cc[index] = c
         else:
             cc[index] = 0
-
-        # if True:#p.size > 0 and cc[index] < 0.5:
-        #     print(V)
-        #     fig, ax = pylab.subplots(ncols=4)
-        #     ax[0].imshow(Imj)
-        #     ax[1].imshow(predicted_j)
-        #     ax[2].imshow(shifted_j)
-        #     ax[3].imshow(predicted_j - shifted_j)
-        #     pylab.show()
 
         # Update the position
         Vx[index] = V[0]

@@ -13,7 +13,7 @@ from typing import List
 import numpy as np
 import scipy.optimize
 import yaml
-from matplotlib import pylab
+import matplotlib.pyplot as plt
 from scipy.spatial.transform import Rotation
 
 __all__ = ["refine"]
@@ -724,7 +724,7 @@ def _refine(
     def write_angles_vs_image_number(P, directory):
         width = 0.0393701 * 190
         height = (6 / 8) * width
-        fig, ax = pylab.subplots(
+        fig, ax = plt.subplots(
             ncols=1, figsize=(width, height), constrained_layout=True
         )
         ax.plot(P[:, 2], label="a")
@@ -739,7 +739,7 @@ def _refine(
     def write_shift_vs_image_number(P, directory):
         width = 0.0393701 * 190
         height = (6 / 8) * width
-        fig, ax = pylab.subplots(
+        fig, ax = plt.subplots(
             ncols=1, figsize=(width, height), constrained_layout=True
         )
         ax.plot(P[:, 0], label="x")
@@ -753,7 +753,7 @@ def _refine(
     def write_xy_shift_distribution(P, directory):
         width = 0.0393701 * 190
         height = (6 / 8) * width
-        fig, ax = pylab.subplots(
+        fig, ax = plt.subplots(
             ncols=2,
             figsize=(width, height),
             constrained_layout=True,

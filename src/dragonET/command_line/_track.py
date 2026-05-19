@@ -14,7 +14,6 @@ import mrcfile
 import numpy as np
 import yaml
 
-# from matplotlib import pylab
 from scipy.spatial.transform import Rotation
 from skimage.feature import SIFT, match_descriptors  # , plot_matches
 from skimage.measure import ransac
@@ -264,16 +263,6 @@ def find_matching_features(projections, features, min_samples=4):
                 max_trials=1000,
             )
 
-            # fig, ax = pylab.subplots()
-            # plot_matches(
-            #     ax,
-            #     projections[i],
-            #     projections[j],
-            #     features[i]["keypoints"][:, ::-1],
-            #     features[j]["keypoints"][:, ::-1],
-            #     matches[inliers,:],
-            # )
-            # pylab.show()
             # Check the number of inliers
             assert np.count_nonzero(inliers) >= min_samples
 

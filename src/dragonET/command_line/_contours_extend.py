@@ -16,7 +16,6 @@ import scipy.optimize
 import scipy.signal
 import yaml
 
-# from matplotlib import pylab
 from scipy.spatial.transform import Rotation
 
 import dragonET
