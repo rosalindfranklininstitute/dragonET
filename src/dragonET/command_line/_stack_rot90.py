@@ -40,18 +40,22 @@ def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
         default=None,
         dest="projections_in",
         required=True,
-        help=("""
+        help=(
+            """
             The filename for the input projection images
-            """),
+            """
+        ),
     )
     parser.add_argument(
         "-o",
         type=str,
         default="rotated.mrc",
         dest="projections_out",
-        help=("""
+        help=(
+            """
             The filename for the output projection images
-            """),
+            """
+        ),
     )
     parser.add_argument(
         "-n",
@@ -59,9 +63,11 @@ def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
         type=int,
         default=1,
         dest="number",
-        help=("""
+        help=(
+            """
             The number of times to rotate by 90 degrees.
-            """),
+            """
+        ),
     )
 
     return parser

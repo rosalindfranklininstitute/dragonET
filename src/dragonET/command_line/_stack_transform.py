@@ -43,9 +43,11 @@ def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
         default=None,
         dest="projections_in",
         required=True,
-        help=("""
+        help=(
+            """
             The filename for the input projection images
-            """),
+            """
+        ),
     )
     parser.add_argument(
         "-o",
@@ -53,9 +55,11 @@ def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
         default="transformed.mrc",
         dest="projections_out",
         required=False,
-        help=("""
+        help=(
+            """
             The filename for the output projection images
-            """),
+            """
+        ),
     )
     parser.add_argument(
         "-m",
@@ -64,9 +68,11 @@ def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
         default=None,
         dest="model_in",
         required=True,
-        help=("""
+        help=(
+            """
             The transform model.
-            """),
+            """
+        ),
     )
 
     return parser

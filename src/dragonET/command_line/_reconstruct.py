@@ -44,9 +44,11 @@ def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
         default=None,
         dest="projections",
         required=True,
-        help=("""
+        help=(
+            """
             The projection images.
-            """),
+            """
+        ),
     )
     parser.add_argument(
         "-m",
@@ -55,10 +57,12 @@ def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
         default=None,
         dest="model",
         required=True,
-        help=("""
+        help=(
+            """
             A file describing the initial model. This file can either be a
             .rawtlt file or a YAML file.
-            """),
+            """
+        ),
     )
     parser.add_argument(
         "-v",
@@ -66,9 +70,11 @@ def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
         type=str,
         default="volume.mrc",
         dest="volume",
-        help=("""
+        help=(
+            """
             The reconstructed volume.
-            """),
+            """
+        ),
     )
     parser.add_argument(
         "-i",
@@ -76,9 +82,11 @@ def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
         type=str,
         default=None,
         dest="initial_volume",
-        help=("""
+        help=(
+            """
             The initial volume.
-            """),
+            """
+        ),
     )
     parser.add_argument(
         "--volume_shape",

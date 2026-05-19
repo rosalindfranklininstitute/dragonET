@@ -40,9 +40,11 @@ def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
         default=None,
         dest="projections_in",
         required=True,
-        help=("""
+        help=(
+            """
             The filename for the input projection images
-            """),
+            """
+        ),
     )
     parser.add_argument(
         "-o",
@@ -50,18 +52,22 @@ def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
         default="edited.mrc",
         dest="projections_out",
         required=False,
-        help=("""
+        help=(
+            """
             The filename for the output projection images
-            """),
+            """
+        ),
     )
     parser.add_argument(
         "--exclude",
         type=lambda x: [int(xx) for xx in x.split(",")],
         default=None,
         dest="exclude",
-        help=("""
+        help=(
+            """
             The image indices (zero indexed) to exclude.
-            """),
+            """
+        ),
     )
 
     return parser

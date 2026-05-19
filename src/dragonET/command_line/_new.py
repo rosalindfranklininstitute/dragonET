@@ -42,9 +42,11 @@ def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
         default=None,
         dest="projections",
         required=True,
-        help=("""
+        help=(
+            """
             The projection images.
-            """),
+            """
+        ),
     )
     parser.add_argument(
         "-a",
@@ -52,9 +54,11 @@ def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
         type=str,
         default=None,
         required=True,
-        help=("""
+        help=(
+            """
             The angles in the rawtlt file.
-            """),
+            """
+        ),
     )
     parser.add_argument(
         "-m",
@@ -62,9 +66,11 @@ def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
         type=str,
         default="initial_model.yaml",
         dest="model",
-        help=("""
+        help=(
+            """
             A YAML file describing the initial model.
-            """),
+            """
+        ),
     )
     parser.add_argument(
         "-r",

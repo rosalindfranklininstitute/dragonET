@@ -44,10 +44,12 @@ def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
         default=None,
         dest="model",
         required=True,
-        help=("""
+        help=(
+            """
             A file describing the initial model. This file can either be a
             .rawtlt file or a YAML file.
-            """),
+            """
+        ),
     )
     parser.add_argument(
         "-v",
@@ -56,9 +58,11 @@ def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
         default=None,
         dest="volume",
         required=True,
-        help=("""
+        help=(
+            """
             The volume to project from.
-            """),
+            """
+        ),
     )
     parser.add_argument(
         "-p",
@@ -66,9 +70,11 @@ def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
         type=str,
         default="projections.mrc",
         dest="projections",
-        help=("""
+        help=(
+            """
             The projection images.
-            """),
+            """
+        ),
     )
     parser.add_argument(
         "--pixel_size",

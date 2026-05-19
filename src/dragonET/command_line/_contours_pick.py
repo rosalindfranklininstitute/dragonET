@@ -45,9 +45,11 @@ def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
         default=None,
         dest="projections",
         required=True,
-        help=("""
+        help=(
+            """
             The projection images.
-            """),
+            """
+        ),
     )
     parser.add_argument(
         "-o",
@@ -55,9 +57,11 @@ def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
         type=str,
         default="contours.npz",
         dest="contours_out",
-        help=("""
+        help=(
+            """
             A YAML file describing the picked point coordinates.
-            """),
+            """
+        ),
     )
     parser.add_argument(
         "-i",
@@ -65,9 +69,11 @@ def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
         type=str,
         default=None,
         dest="contours_in",
-        help=("""
+        help=(
+            """
             A YAML file describing the picked point coordinates.
-            """),
+            """
+        ),
     )
     parser.add_argument(
         "-m",
@@ -75,9 +81,11 @@ def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
         type=str,
         default=None,
         dest="model",
-        help=("""
+        help=(
+            """
             A YAML file describing the geometry model.
-            """),
+            """
+        ),
     )
 
     return parser

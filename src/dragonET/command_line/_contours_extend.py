@@ -49,9 +49,11 @@ def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
         default=None,
         dest="projections_in",
         required=True,
-        help=("""
+        help=(
+            """
             The filename for the projection images
-            """),
+            """
+        ),
     )
     parser.add_argument(
         "--contours_in",
@@ -59,9 +61,11 @@ def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
         default=None,
         dest="contours_in",
         required=True,
-        help=("""
+        help=(
+            """
             A YAML file containing contour information.
-            """),
+            """
+        ),
     )
     parser.add_argument(
         "--model_in",
@@ -69,19 +73,23 @@ def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
         default=None,
         dest="model_in",
         required=True,
-        help=("""
+        help=(
+            """
             A file describing the initial model. This file can either be a
             .rawtlt file or a YAML file.
-            """),
+            """
+        ),
     )
     parser.add_argument(
         "--contours_out",
         type=str,
         default="extended.npz",
         dest="contours_out",
-        help=("""
+        help=(
+            """
             A YAML file describing the refined model.
-            """),
+            """
+        ),
     )
     parser.add_argument(
         "-s",
@@ -89,9 +97,11 @@ def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
         type=int,
         default=1,
         dest="subset_size",
-        help=("""
+        help=(
+            """
             The size of the subset to use to predict adjacent images.
-            """),
+            """
+        ),
     )
 
     return parser

@@ -41,9 +41,11 @@ def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
         default=None,
         dest="contours_in",
         required=True,
-        help=("""
+        help=(
+            """
             A YAML file containing contour information.
-            """),
+            """
+        ),
     )
     parser.add_argument(
         "--model_in",
@@ -51,19 +53,23 @@ def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
         default=None,
         dest="model_in",
         required=True,
-        help=("""
+        help=(
+            """
             A file describing the initial model. This file can either be a
             .rawtlt file or a YAML file.
-            """),
+            """
+        ),
     )
     parser.add_argument(
         "--points_out",
         type=str,
         default="triangulated.npz",
         dest="points_out",
-        help=("""
+        help=(
+            """
             A YAML file describing the refined model.
-            """),
+            """
+        ),
     )
 
     return parser

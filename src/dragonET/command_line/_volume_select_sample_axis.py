@@ -42,9 +42,11 @@ def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
         default=None,
         dest="volume",
         required=True,
-        help=("""
+        help=(
+            """
             The volume.
-            """),
+            """
+        ),
     )
     parser.add_argument(
         "-i",
@@ -53,9 +55,11 @@ def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
         default=None,
         dest="model_in",
         required=True,
-        help=("""
+        help=(
+            """
             A YAML file describing the geometry model.
-            """),
+            """
+        ),
     )
     parser.add_argument(
         "-o",
@@ -63,9 +67,11 @@ def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
         type=str,
         default="aligned_model.yaml",
         dest="model_out",
-        help=("""
+        help=(
+            """
             A YAML file describing the geometry model.
-            """),
+            """
+        ),
     )
 
     return parser
