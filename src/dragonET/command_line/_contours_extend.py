@@ -12,8 +12,6 @@ from typing import List
 import mrcfile
 import numpy as np
 import scipy.ndimage
-import scipy.optimize
-import scipy.signal
 import yaml
 
 # from matplotlib import pylab
