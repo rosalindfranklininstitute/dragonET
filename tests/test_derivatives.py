@@ -18,8 +18,9 @@ def simulated_data():
     a = np.radians(np.random.uniform(-10, 10, size=c.size))
     b = np.radians(np.random.uniform(-10, 10, size=c.size))
 
-    handle = np.load("tests/template.npz")
-    mask = handle["mask"][: c.size, :]
+    # Generate a mask of (image number, point number) which shows which points
+    # are on which images
+    mask = np.random.randint(0, 2, (c.size, 100)).astype(bool)
     mask = mask[:, np.count_nonzero(mask, axis=0) >= 4]
 
     Ra = Rotation.from_euler("z", a).as_matrix()
@@ -45,6 +46,8 @@ def simulated_data():
 def derivative_test_function(d_func, indices, simulated_data):
     data, mask, dx, dy, a, b, c = simulated_data
 
+    smoothness = 0
+
     M = np.concatenate([mask, mask], axis=0)
     X = data[:, :, 0]
     Y = data[:, :, 1]
@@ -56,7 +59,7 @@ def derivative_test_function(d_func, indices, simulated_data):
 
     def fun(x, parameters, active, W, M):
         parameters[active] = x
-        return dragonET.command_line._refine.residuals(parameters, active, W, M)
+        return dragonET.command_line._refine.residuals(parameters, active, W, M, smoothness)
 
     def jac(x, parameters, active, W, M):
         parameters[active] = x
@@ -98,6 +101,8 @@ def test_d_dc(simulated_data):
 
 def test_jacobian(simulated_data):
     data, mask, dx, dy, a, b, c = simulated_data
+    
+    smoothness = 0
 
     M = np.concatenate([mask, mask], axis=0)
     X = data[:, :, 0]
@@ -109,11 +114,11 @@ def test_jacobian(simulated_data):
 
     def fun(x, parameters, active, W, M):
         parameters[active] = x
-        return dragonET.command_line._refine.residuals(parameters, active, W, M)
+        return dragonET.command_line._refine.residuals(parameters, active, W, M, smoothness)
 
     def jac(x, parameters, active, W, M):
         parameters[active] = x
-        return dragonET.command_line._refine.jacobian(parameters, active, W, M)
+        return dragonET.command_line._refine.jacobian(parameters, active, W, M, smoothness)
 
     x = parameters[active]
 
