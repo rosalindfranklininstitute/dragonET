@@ -59,7 +59,9 @@ def derivative_test_function(d_func, indices, simulated_data):
 
     def fun(x, parameters, active, W, M):
         parameters[active] = x
-        return dragonET.command_line._refine.residuals(parameters, active, W, M, smoothness)
+        return dragonET.command_line._refine.residuals(
+            parameters, active, W, M, smoothness
+        )
 
     def jac(x, parameters, active, W, M):
         parameters[active] = x
@@ -101,7 +103,7 @@ def test_d_dc(simulated_data):
 
 def test_jacobian(simulated_data):
     data, mask, dx, dy, a, b, c = simulated_data
-    
+
     smoothness = 0
 
     M = np.concatenate([mask, mask], axis=0)
@@ -114,11 +116,15 @@ def test_jacobian(simulated_data):
 
     def fun(x, parameters, active, W, M):
         parameters[active] = x
-        return dragonET.command_line._refine.residuals(parameters, active, W, M, smoothness)
+        return dragonET.command_line._refine.residuals(
+            parameters, active, W, M, smoothness
+        )
 
     def jac(x, parameters, active, W, M):
         parameters[active] = x
-        return dragonET.command_line._refine.jacobian(parameters, active, W, M, smoothness)
+        return dragonET.command_line._refine.jacobian(
+            parameters, active, W, M, smoothness
+        )
 
     x = parameters[active]
 
