@@ -13,8 +13,11 @@ from typing import List
 import numpy as np
 import scipy.optimize
 import yaml
+import matplotlib
 import matplotlib.pyplot as plt
 from scipy.spatial.transform import Rotation
+
+matplotlib.use("Agg")
 
 __all__ = ["refine"]
 
