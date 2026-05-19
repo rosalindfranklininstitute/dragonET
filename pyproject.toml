@@ -52,7 +52,7 @@ dependencies = [
   "mrcfile",
   "numpy",
   "pyyaml",
-  "skimage",
+  "scikit-image",
   "scipy",
   "torch",
   "astra-toolbox",
