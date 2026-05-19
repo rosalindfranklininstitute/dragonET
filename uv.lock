@@ -1391,8 +1391,6 @@ dependencies = [
     { name = "astra-toolbox" },
     { name = "matplotlib" },
     { name = "mrcfile" },
-    { name = "napari", extra = ["all"] },
-    { name = "napari-mrcfile-reader" },
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11' or (extra == 'extra-8-dragonet-cpu' and extra == 'extra-8-dragonet-cu113') or (extra == 'extra-8-dragonet-cpu' and extra == 'extra-8-dragonet-cu118') or (extra == 'extra-8-dragonet-cpu' and extra == 'extra-8-dragonet-cu126') or (extra == 'extra-8-dragonet-cpu' and extra == 'extra-8-dragonet-cu128') or (extra == 'extra-8-dragonet-cu113' and extra == 'extra-8-dragonet-cu118') or (extra == 'extra-8-dragonet-cu113' and extra == 'extra-8-dragonet-cu126') or (extra == 'extra-8-dragonet-cu113' and extra == 'extra-8-dragonet-cu128') or (extra == 'extra-8-dragonet-cu118' and extra == 'extra-8-dragonet-cu126') or (extra == 'extra-8-dragonet-cu118' and extra == 'extra-8-dragonet-cu128') or (extra == 'extra-8-dragonet-cu126' and extra == 'extra-8-dragonet-cu128')" },
     { name = "numpy", version = "2.4.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11' or (extra == 'extra-8-dragonet-cpu' and extra == 'extra-8-dragonet-cu113') or (extra == 'extra-8-dragonet-cpu' and extra == 'extra-8-dragonet-cu118') or (extra == 'extra-8-dragonet-cpu' and extra == 'extra-8-dragonet-cu126') or (extra == 'extra-8-dragonet-cpu' and extra == 'extra-8-dragonet-cu128') or (extra == 'extra-8-dragonet-cu113' and extra == 'extra-8-dragonet-cu118') or (extra == 'extra-8-dragonet-cu113' and extra == 'extra-8-dragonet-cu126') or (extra == 'extra-8-dragonet-cu113' and extra == 'extra-8-dragonet-cu128') or (extra == 'extra-8-dragonet-cu118' and extra == 'extra-8-dragonet-cu126') or (extra == 'extra-8-dragonet-cu118' and extra == 'extra-8-dragonet-cu128') or (extra == 'extra-8-dragonet-cu126' and extra == 'extra-8-dragonet-cu128')" },
     { name = "pyyaml" },
@@ -1423,6 +1421,11 @@ cu126 = [
 cu128 = [
     { name = "torch", version = "2.10.0+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" } },
 ]
+napari = [
+    { name = "napari", extra = ["all"] },
+    { name = "napari-mrcfile-reader" },
+    { name = "pyqt5-qt5", marker = "sys_platform == 'win32' or (extra == 'extra-8-dragonet-cpu' and extra == 'extra-8-dragonet-cu113') or (extra == 'extra-8-dragonet-cpu' and extra == 'extra-8-dragonet-cu118') or (extra == 'extra-8-dragonet-cpu' and extra == 'extra-8-dragonet-cu126') or (extra == 'extra-8-dragonet-cpu' and extra == 'extra-8-dragonet-cu128') or (extra == 'extra-8-dragonet-cu113' and extra == 'extra-8-dragonet-cu118') or (extra == 'extra-8-dragonet-cu113' and extra == 'extra-8-dragonet-cu126') or (extra == 'extra-8-dragonet-cu113' and extra == 'extra-8-dragonet-cu128') or (extra == 'extra-8-dragonet-cu118' and extra == 'extra-8-dragonet-cu126') or (extra == 'extra-8-dragonet-cu118' and extra == 'extra-8-dragonet-cu128') or (extra == 'extra-8-dragonet-cu126' and extra == 'extra-8-dragonet-cu128')" },
+]
 test = [
     { name = "pytest" },
     { name = "pytest-cov" },
@@ -1441,9 +1444,10 @@ requires-dist = [
     { name = "astra-toolbox" },
     { name = "matplotlib" },
     { name = "mrcfile" },
-    { name = "napari", extras = ["all"] },
-    { name = "napari-mrcfile-reader" },
+    { name = "napari", extras = ["all"], marker = "extra == 'napari'" },
+    { name = "napari-mrcfile-reader", marker = "extra == 'napari'" },
     { name = "numpy" },
+    { name = "pyqt5-qt5", marker = "sys_platform == 'win32' and extra == 'napari'", specifier = "==5.15.2" },
     { name = "pytest", marker = "extra == 'test'" },
     { name = "pytest-cov", marker = "extra == 'test'" },
     { name = "pyyaml" },
@@ -1455,7 +1459,7 @@ requires-dist = [
     { name = "torch", marker = "extra == 'cu126'", specifier = ">=2.7.0", index = "https://download.pytorch.org/whl/cu126", conflict = { package = "dragonet", extra = "cu126" } },
     { name = "torch", marker = "extra == 'cu128'", specifier = ">=2.7.0", index = "https://download.pytorch.org/whl/cu128", conflict = { package = "dragonet", extra = "cu128" } },
 ]
-provides-extras = ["test", "cpu", "cu113", "cu118", "cu126", "cu128"]
+provides-extras = ["test", "napari", "cpu", "cu113", "cu118", "cu126", "cu128"]
 
 [package.metadata.requires-dev]
 dev = [

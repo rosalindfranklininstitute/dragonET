@@ -50,8 +50,6 @@ classifiers = [
 dependencies = [
   "matplotlib",
   "mrcfile",
-  "napari[all]",
-  "napari-mrcfile-reader",
   "numpy",
   "pyyaml",
   "scipy",
@@ -80,6 +78,12 @@ test = [
   "pytest",
   "pytest-cov",
 ]
+
+napari = [
+  "pyqt5-qt5 == 5.15.2 ; platform_system == 'Windows'",
+  "napari[all]",
+  "napari-mrcfile-reader",
+ ]
 
 # Extras that are linked with the PyTorch index for CPU or CUDA version (if using uv)
 cpu = [
