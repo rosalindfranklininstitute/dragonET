@@ -36,6 +36,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN groupadd --system --gid 999 nonroot \
   && useradd --system --gid 999 --uid 999 --create-home nonrootpo
 
+RUN apt-get update && apt-get install git --assume-yes
+
 # Copy the Python version
 COPY --from=builder /python /python
 
@@ -43,7 +45,7 @@ COPY --from=builder /python /python
 COPY --from=builder --chown=nonroot:nonroot /app/.venv /app/.venv
 
 # Place executables in the environment at the front of the path
-ENV PATH /app/venv/bin:$PATH
+ENV PATH=/app/venv/bin:$PATH
 
 # Use the non-root user to run our application
 USER nonroot
