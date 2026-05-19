@@ -15,3 +15,4 @@ from dragonET.command_line._stack_transform import *  # noqa
 from dragonET.command_line._track import *  # noqa
 from dragonET.command_line._volume_rebin import *  # noqa
 from dragonET.command_line._volume_select_sample_axis import *  # noqa
+from dragonET.command_line._make_video import *  # noqa
