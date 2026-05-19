@@ -55,6 +55,7 @@ dependencies = [
   "torch",
   "astra-toolbox",
   "pillow>=12.1.1",
+  "imageio[ffmpeg]>=2.37.3",
 ]
 
 dynamic = [

@@ -11,8 +11,7 @@ from typing import List
 
 import mrcfile
 import numpy as np
-import os
-import PIL.Image
+import imageio
 
 
 __all__ = ["make_video"]
@@ -46,17 +45,6 @@ def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
         help=(
             """
             The mrc filename.
-            """
-        ),
-    )
-    parser.add_argument(
-        "--image_filename_format",
-        type=str,
-        default="./tmp/temp_image_%05d.png",
-        dest="image_filename_format",
-        help=(
-            """
-            The image filename format. 
             """
         ),
     )
@@ -134,7 +122,6 @@ def make_video_impl(args):
     # Do the work
     _make_video(
         args.mrc_filename,
-        args.image_filename_format,
         args.movie_filename,
         args.factor,
         args.swap_axis,
@@ -216,7 +203,6 @@ def sum_stack(data: np.ndarray, factor: int) -> np.ndarray:
 
 def _make_video(
     mrc_filename: str,
-    image_filename: str,
     movie_filename: str,
     factor: int,
     swapaxis: bool = False,
@@ -249,11 +235,10 @@ def _make_video(
     s1 = 255.0 / (vmax - vmin)
     s0 = -s1 * vmin
 
-    image_directory = os.path.dirname(image_filename)
-    if not os.path.exists(image_directory):
-        os.makedirs(image_directory)
+    writer = imageio.get_writer(
+        movie_filename, format="FFMPEG", mode="I", fps=fps, codec="libx264"
+    )
     for i in range(data.shape[0]):
-        filename = image_filename % (i + 1)
         image = data[i] * s1 + s0
         image = np.clip(image, 0, 255)
 
@@ -263,13 +248,7 @@ def _make_video(
         t0 = -t1 * vmin
         image = image * t1 + t0
         image = np.clip(image, 0, 255)
-
         image = image.astype(np.uint8)
-        PIL.Image.fromarray(image).save(filename)
-        print(f"Writing {filename}")
+        writer.append_data(image)
 
-    print("Running ffmpeg")
-    os.system(
-        "ffmpeg -r %d -i %s -qscale:v 1 -vcodec libx264 -crf 1 -y %s"
-        % (fps, image_filename, movie_filename)
-    )
+    writer.close()
