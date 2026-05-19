@@ -2,7 +2,7 @@
 
 > **dragonET**: **D**odgy **R**econstruction and **A**lignment from **G**eneral **O**rientatio**N**s for **E**lectron **T**omography
 
-[![Building](https://github.com/jmp1985/dragonET/actions/workflows/python-package.yml/badge.svg)](https://github.com/jmp1985/dragonET/actions/workflows/python-package.yml)
+[![Building](https://github.com/rosalindfranklininstitute/dragonET/actions/workflows/python-package.yml/badge.svg)](https://github.com/rosalindfranklininstitute/dragonET/actions/workflows/python-package.yml)
 
 ## Installation
 
@@ -27,7 +27,7 @@ You can find instructions on how to use this software [here](Usage.md).
 
 ## Issues
 
-Please use the [GitHub issue tracker](https://github.com/jmp1985/dragonET/issues) to submit bugs or request features.
+Please use the [GitHub issue tracker](https://github.com/rosalindfranklininstitute/dragonET/issues) to submit bugs or request features.
 
 ## Contributions
 
