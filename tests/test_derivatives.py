@@ -23,9 +23,9 @@ def simulated_data():
     mask = np.random.randint(0, 2, (c.size, 100)).astype(bool)
     mask = mask[:, np.count_nonzero(mask, axis=0) >= 4]
 
-    Ra = Rotation.from_euler("z", a).as_matrix()
-    Rb = Rotation.from_euler("x", b).as_matrix()
-    Rc = Rotation.from_euler("y", c).as_matrix()
+    Ra = Rotation.from_euler("z", a[:, np.newaxis]).as_matrix()
+    Rb = Rotation.from_euler("x", b[:, np.newaxis]).as_matrix()
+    Rc = Rotation.from_euler("y", c[:, np.newaxis]).as_matrix()
     R = Ra @ Rb @ Rc
 
     R = np.concatenate([R[:, 0, :], R[:, 1, :]], axis=0)
