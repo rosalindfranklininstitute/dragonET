@@ -263,9 +263,9 @@ def d_dt(dx, dy, a, b, c, W, M):
     num_points = W.shape[1]
 
     # Get the rotation matrices
-    Ra = Rotation.from_euler("z", a).as_matrix()
-    Rb = Rotation.from_euler("x", b).as_matrix()
-    Rc = Rotation.from_euler("y", c).as_matrix()
+    Ra = Rotation.from_euler("z", a[:, np.newaxis]).as_matrix()
+    Rb = Rotation.from_euler("x", b[:, np.newaxis]).as_matrix()
+    Rc = Rotation.from_euler("y", c[:, np.newaxis]).as_matrix()
     Rabc = Ra @ Rb @ Rc
 
     # Construct the rotation matrices
@@ -383,9 +383,9 @@ def d_da(dx, dy, a, b, c, W, M):
     W.shape[1]
 
     # Get the rotation matrices
-    Ra = Rotation.from_euler("z", a).as_matrix()
-    Rb = Rotation.from_euler("x", b).as_matrix()
-    Rc = Rotation.from_euler("y", c).as_matrix()
+    Ra = Rotation.from_euler("z", a[:, np.newaxis]).as_matrix()
+    Rb = Rotation.from_euler("x", b[:, np.newaxis]).as_matrix()
+    Rc = Rotation.from_euler("y", c[:, np.newaxis]).as_matrix()
     Rabc = Ra @ Rb @ Rc
 
     # Compute the derivative of Ra w.r.t a
@@ -406,9 +406,9 @@ def d_db(dx, dy, a, b, c, W, M):
     W.shape[1]
 
     # Get the rotation matrices
-    Ra = Rotation.from_euler("z", a).as_matrix()
-    Rb = Rotation.from_euler("x", b).as_matrix()
-    Rc = Rotation.from_euler("y", c).as_matrix()
+    Ra = Rotation.from_euler("z", a[:, np.newaxis]).as_matrix()
+    Rb = Rotation.from_euler("x", b[:, np.newaxis]).as_matrix()
+    Rc = Rotation.from_euler("y", c[:, np.newaxis]).as_matrix()
     Rabc = Ra @ Rb @ Rc
 
     # Compute the derivative of Ra w.r.t a
@@ -429,9 +429,9 @@ def d_dc(dx, dy, a, b, c, W, M):
     W.shape[1]
 
     # Get the rotation matrices
-    Ra = Rotation.from_euler("z", a).as_matrix()
-    Rb = Rotation.from_euler("x", b).as_matrix()
-    Rc = Rotation.from_euler("y", c).as_matrix()
+    Ra = Rotation.from_euler("z", a[:, np.newaxis]).as_matrix()
+    Rb = Rotation.from_euler("x", b[:, np.newaxis]).as_matrix()
+    Rc = Rotation.from_euler("y", c[:, np.newaxis]).as_matrix()
     Rabc = Ra @ Rb @ Rc
 
     # Compute the derivative of Ra w.r.t a
