@@ -3,7 +3,11 @@
 #
 [build-system]
 
-requires = ["setuptools", "setuptools-scm", "wheel"]
+requires = [
+  "setuptools",
+  "setuptools-scm",
+  "wheel",
+]
 build-backend = "setuptools.build_meta"
 
 #
@@ -18,30 +22,29 @@ description = "Dodgy Reconstruction and Alignment of General OrientatioNs for El
 
 readme = "README.md"
 
-requires-python = ">=3.6"
+requires-python = ">=3.10"
 
-license = {file = "LICENSE"}
+license = { file = "LICENSE" }
 
 keywords = [
   "dragonET",
   "python",
-  "project"
+  "project",
 ]
 
 authors = [
-  {name = "James Parkhurst", email = "james.parkhurst@diamond.ac.uk" }
+  { name = "James Parkhurst", email = "james.parkhurst@diamond.ac.uk" },
 ]
 
 classifiers = [
   "Development Status :: 3 - Alpha",
   "License :: OSI Approved :: MIT License",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.6",
-  "Programming Language :: Python :: 3.7",
-  "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
 ]
 
 dependencies = [
@@ -57,7 +60,7 @@ dependencies = [
 ]
 
 dynamic = [
-  "version"
+  "version",
 ]
 
 #
@@ -77,6 +80,68 @@ test = [
   "pytest",
   "pytest-cov",
 ]
+
+# Extras that are linked with the PyTorch index for CPU or CUDA version (if using uv)
+cpu = [
+  "torch >= 2.7.0",
+]
+cu113 = [
+  "torch >= 2.7.0",
+]
+cu118 = [
+  "torch >= 2.7.0",
+]
+cu126 = [
+  "torch >= 2.7.0",
+]
+cu128 = [
+  "torch >= 2.7.0",
+]
+
+[tool.uv]
+conflicts = [
+  [
+    { extra = "cpu" },
+    { extra = "cu113" },
+    { extra = "cu118" },
+    { extra = "cu126" },
+    { extra = "cu128" },
+  ],
+]
+
+[tool.uv.sources]
+torch = [
+  { index = "pytorch-cpu", extra = "cpu" },
+  { index = "pytorch-cu118", extra = "cu113" },
+  { index = "pytorch-cu118", extra = "cu118" },
+  { index = "pytorch-cu126", extra = "cu126" },
+  { index = "pytorch-cu128", extra = "cu128" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cu113"
+url = "https://download.pytorch.org/whl/cu113"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cu118"
+url = "https://download.pytorch.org/whl/cu118"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cu126"
+url = "https://download.pytorch.org/whl/cu126"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
 
 #
 # Project command line scripts
@@ -106,14 +171,16 @@ test = [
 #
 [tool.setuptools.packages.find]
 
-where = ["src"]
+where = [
+  "src",
+]
 
 #
 # Set the package version from git tag
 #
 [tool.setuptools.dynamic]
 
-version = {attr = "dragonET._version.__version__"}
+version = { attr = "dragonET._version.__version__" }
 
 #
 # Configure setuptools-scm to generate version file
@@ -129,4 +196,6 @@ write_to = "src/dragonET/_version.py"
 
 addopts = "--cov=src --cov-report term --cov-report html"
 
-testpaths = [ "tests" ]
+testpaths = [
+  "tests",
+]
