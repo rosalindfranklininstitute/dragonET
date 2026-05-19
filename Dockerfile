@@ -16,18 +16,18 @@ ENV UV_PYTHON_PREFERENCE=only-managed
 RUN apt update
 RUN apt install -y git
 
-WORKDIR /app
-
 RUN git submodule update --init --recursive
+
+# Copy the project into the intermediate image
+COPY . /app
+
+WORKDIR /app
 
 # Install dependencies
 RUN --mount=type=cache,target=/root/.cache/uv \
   --mount=type=bind,source=uv.lock,target=uv.lock \
   --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
   uv sync --locked --no-install-project --no-editable
-
-# Copy the project into the intermediate image
-COPY . /app
 
 # Sync the project
 RUN --mount=type=cache,target=/root/.cache/uv \
@@ -39,7 +39,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Setup a non-root user
 RUN groupadd --system --gid 999 nonroot \
-  && useradd --system --gid 999 --uid 999 --create-home nonroot
+  && useradd --system --gid 999 --uid 999 --create-home nonrootpo
 
 # Copy the Python version
 COPY --from=builder /python /python
