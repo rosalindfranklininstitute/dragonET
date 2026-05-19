@@ -10,7 +10,8 @@
 You can install the package by running the following commands:
 
 ```
-pip install -e .
+uv venv
+uv pip install -e .
 ```
 
 ## Testing
@@ -18,8 +19,7 @@ pip install -e .
 You can run the package tests by running the following commands:
 
 ```
-pip install .[test]
-pytest
+uv run pytest
 ```
 
 ## Issues
