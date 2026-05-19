@@ -16,12 +16,12 @@ ENV UV_PYTHON_PREFERENCE=only-managed
 RUN apt update
 RUN apt install -y git
 
-RUN git submodule update --init --recursive
-
 # Copy the project into the intermediate image
 COPY . /app
 
 WORKDIR /app
+
+RUN git submodule update --init --recursive
 
 # Install dependencies
 RUN --mount=type=cache,target=/root/.cache/uv \
