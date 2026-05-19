@@ -166,7 +166,7 @@ def _contours_triangulate(
     P = np.array(model["transform"])
 
     # The image size
-    image_size = model["image_size"]
+    model["image_size"]
 
     # Read the points
     data, mask, octave = read_points(contours_in)

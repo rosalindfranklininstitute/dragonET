@@ -184,7 +184,7 @@ def residuals(parameters, active, W, M, smoothness):
     dx, dy, a, b, c = parameters
 
     # Get num frames and num points
-    num_frames = W.shape[0]
+    W.shape[0]
     num_points = W.shape[1]
 
     # Get the rotation matrices
@@ -280,7 +280,7 @@ def d_dt(dx, dy, a, b, c, W, M):
         # Get the mask, observations, rotation matrices
         Mj = M[:, j]
         Nj = np.count_nonzero(Mj)
-        W0 = W[Mj, j]
+        W[Mj, j]
         Rj = R[Mj, :]
         Qj = np.linalg.inv(Rj.T @ Rj) @ Rj.T
 
@@ -380,7 +380,7 @@ def d_dp(Rabc, dRabc_dp, W, M):
 def d_da(dx, dy, a, b, c, W, M):
     # Get num frames and num points
     num_frames = a.shape[0]
-    num_points = W.shape[1]
+    W.shape[1]
 
     # Get the rotation matrices
     Ra = Rotation.from_euler("z", a).as_matrix()
@@ -403,7 +403,7 @@ def d_da(dx, dy, a, b, c, W, M):
 def d_db(dx, dy, a, b, c, W, M):
     # Get num frames and num points
     num_frames = a.shape[0]
-    num_points = W.shape[1]
+    W.shape[1]
 
     # Get the rotation matrices
     Ra = Rotation.from_euler("z", a).as_matrix()
@@ -426,7 +426,7 @@ def d_db(dx, dy, a, b, c, W, M):
 def d_dc(dx, dy, a, b, c, W, M):
     # Get num frames and num points
     num_frames = a.shape[0]
-    num_points = W.shape[1]
+    W.shape[1]
 
     # Get the rotation matrices
     Ra = Rotation.from_euler("z", a).as_matrix()
@@ -543,7 +543,9 @@ def jacobian_penalties(parameters, active, W, M, smoothness):
     # For a to vary smoothly
     # For b to vary smoothly and be close to zero
     # For c to vary smoothly
-    not_none = lambda x: [xx for xx in x if xx is not None]
+    def not_none(x):
+        return [xx for xx in x if xx is not None]
+
     J = smoothness * np.concatenate(
         not_none(
             [
@@ -655,7 +657,7 @@ def refine_model(
     # Construct the input
     X = data[:, :, 0]
     Y = data[:, :, 1]
-    t = np.concatenate([dx, dy], axis=0)
+    np.concatenate([dx, dy], axis=0)
     M = np.concatenate([mask, mask], axis=0)
     Wc = np.concatenate([X, Y], axis=0)
 

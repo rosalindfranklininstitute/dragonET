@@ -208,8 +208,8 @@ def _predict_image(projections, P, P_image):
         dx = P[:, 0] * image_size[1]
         dy = P[:, 1] * image_size[0]
         a = np.radians(P[:, [2]])
-        b = np.radians(P[:, [3]])
-        c = np.radians(P[:, [4]])
+        np.radians(P[:, [3]])
+        np.radians(P[:, [4]])
 
         # Only use in plane rotation and translation
         matrix = Rotation.from_euler("z", a).as_matrix()
@@ -246,7 +246,7 @@ def _predict_image(projections, P, P_image):
             axis=0,
         )
 
-    I = _transform_stack(projections, P, P_image)
+    I = _transform_stack(projections, P, P_image)  # noqa: E741
     M = _transform_stack(np.ones_like(projections), P, P_image)
     M = np.isclose(M, 1, atol=0.1)
     return I, M
@@ -267,8 +267,8 @@ def _predict_coordinates(data, mask, P, P_image, image_size):
         dx = P[:, 0] * image_size[1]
         dy = P[:, 1] * image_size[0]
         a = np.radians(P[:, [2]])
-        b = np.radians(P[:, [3]])
-        c = np.radians(P[:, [4]])
+        np.radians(P[:, [3]])
+        np.radians(P[:, [4]])
 
         # Only use in plane rotation and translation
         matrix = Rotation.from_euler("z", a).as_matrix()

@@ -153,7 +153,7 @@ def rebin_stack(data: np.ndarray, factor: int) -> np.ndarray:
 
 def extract_features(projections, rebin_factor):
     # Get the rebin factor octave
-    rebin_factor_octave = np.log2(rebin_factor).astype(int)
+    np.log2(rebin_factor).astype(int)
 
     # Get the image size
     image_size = np.array(projections.shape[1:])
@@ -409,8 +409,10 @@ def track_first_and_last(projections, data, mask, octave, rebin_factor, min_samp
     Track features across the first and last images if they are around 180 degrees apart
 
     """
+
     # Function to flip coordinates
-    flip_coordinate = lambda x: np.array((1 - x[0], x[1]))
+    def flip_coordinate(x):
+        return np.array((1 - x[0], x[1]))
 
     # Get the image size (reversed to be X, Y)
     image_size = np.array(projections.shape[1:])[None, ::-1]

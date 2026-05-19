@@ -377,7 +377,7 @@ def align_stack(
         for it in range(max_iter):
             # Apply the real space weights to the target data
             # Align the image with the stack
-            I, shift = align_single(
+            I, shift = align_single(  # noqa: E741
                 fft_data_stack, apply_weights(fft_data[tar_index].to(device))
             )
 
