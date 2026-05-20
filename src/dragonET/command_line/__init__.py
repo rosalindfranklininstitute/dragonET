@@ -8,6 +8,7 @@ from dragonET.command_line._new import *  # noqa
 from dragonET.command_line._project import *  # noqa
 from dragonET.command_line._reconstruct import *  # noqa
 from dragonET.command_line._refine import *  # noqa
+from dragonET.command_lime._run import * # noqa
 from dragonET.command_line._stack_edit import *  # noqa
 from dragonET.command_line._stack_predict import *  # noqa
 from dragonET.command_line._stack_rebin import *  # noqa
