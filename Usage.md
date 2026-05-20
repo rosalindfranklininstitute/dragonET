@@ -104,6 +104,9 @@ dragonET.new -p /path/to/projections.mrc -a angles.rawtlt
 - If you know that the tilt axis is offset by a certain amount (for example 90 degrees) you should set the global rotation here
 - This YAML file serves as the foundation for all subsequent processing steps
 
+**Notes:**
+- You may not have an angles.rawtlt file available so you may need to generate one yourself. This can be done using the `dragonET.generate_angles -p /path/to/projections.mrc` command.
+
 ### Step 2: Feature Tracking
 
 **Command:** `dragonET.track`
