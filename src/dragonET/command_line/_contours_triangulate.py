@@ -24,7 +24,7 @@ def get_description():
     return "Refine a model to align the projection images"
 
 
-def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
+def get_parser(parser: ArgumentParser | None = None) -> ArgumentParser:
     """
     Get the contours_triangulate parser
 
@@ -95,7 +95,7 @@ def contours_triangulate_impl(args):
     print("Time taken: %.2f seconds" % (time.time() - start_time))
 
 
-def contours_triangulate(args: List[str] = None):
+def contours_triangulate(args: List[str] | None = None):
     """
     Triangulate the contours
 

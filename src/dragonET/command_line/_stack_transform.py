@@ -9,7 +9,7 @@ import time
 from argparse import ArgumentParser
 from typing import List
 
-import mrcfile
+import mrcfile  # type: ignore
 import numpy as np
 import scipy
 import yaml
@@ -26,7 +26,7 @@ def get_description():
     return "Transform the stack"
 
 
-def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
+def get_parser(parser: ArgumentParser | None = None) -> ArgumentParser:
     """
     Get the stack transform parser
 
@@ -98,7 +98,7 @@ def stack_transform_impl(args):
     print("Time taken: %.2f seconds" % (time.time() - start_time))
 
 
-def stack_transform(args: List[str] = None):
+def stack_transform(args: List[str] | None = None):
     """
     Transform the stack
 

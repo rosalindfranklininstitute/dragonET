@@ -9,7 +9,7 @@ import time
 from argparse import ArgumentParser
 from typing import List
 
-import mrcfile
+import mrcfile  # type: ignore
 import numpy as np
 
 __all__ = ["volume_rebin"]
@@ -23,7 +23,7 @@ def get_description():
     return "Rebin the volume"
 
 
-def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
+def get_parser(parser: ArgumentParser | None = None) -> ArgumentParser:
     """
     Get the volume rebin parser
 
@@ -94,7 +94,7 @@ def volume_rebin_impl(args):
     print("Time taken: %.2f seconds" % (time.time() - start_time))
 
 
-def volume_rebin(args: List[str] = None):
+def volume_rebin(args: List[str] | None = None):
     """
     Rebin the volume
 

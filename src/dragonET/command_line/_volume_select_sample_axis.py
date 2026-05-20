@@ -9,7 +9,7 @@ import time
 from argparse import ArgumentParser
 from typing import List
 
-import mrcfile
+import mrcfile  # type: ignore
 import numpy as np
 import yaml
 
@@ -24,7 +24,7 @@ def get_description():
     return "Select the sample axis"
 
 
-def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
+def get_parser(parser: ArgumentParser | None = None) -> ArgumentParser:
     """
     Get the parser
 
@@ -97,7 +97,7 @@ def volume_select_sample_axis_impl(args):
     print("Time taken: %.2f seconds" % (time.time() - start_time))
 
 
-def volume_select_sample_axis(args: List[str] = None):
+def volume_select_sample_axis(args: List[str] | None = None):
     """
     Select the sample axis
 
@@ -107,14 +107,14 @@ def volume_select_sample_axis(args: List[str] = None):
 
 def _volume_select_sample_axis(
     volume_filename: str,
-    model_in_filename: str = None,
-    model_out_filename: str = None,
+    model_in_filename: str | None = None,
+    model_out_filename: str | None = None,
 ):
     """
     Select sample axis
 
     """
-    import napari
+    import napari  # type: ignore
 
     def read_volume(filename):
         print("Reading volume from %s" % filename)

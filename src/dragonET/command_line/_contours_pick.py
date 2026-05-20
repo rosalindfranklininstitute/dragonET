@@ -9,7 +9,7 @@ import time
 from argparse import ArgumentParser
 from typing import List
 
-import mrcfile
+import mrcfile  # type: ignore
 import numpy as np
 import yaml
 from scipy.spatial.transform import Rotation
@@ -27,7 +27,7 @@ def get_description():
     return "Manually pick fiduccials"
 
 
-def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
+def get_parser(parser: ArgumentParser | None = None) -> ArgumentParser:
     """
     Get the pick parser
 
@@ -112,7 +112,7 @@ def contours_pick_impl(args):
     print("Time taken: %.2f seconds" % (time.time() - start_time))
 
 
-def contours_pick(args: List[str] = None):
+def contours_pick(args: List[str] | None = None):
     """
     Pick the fiduccials manually
 
@@ -123,14 +123,14 @@ def contours_pick(args: List[str] = None):
 def _contours_pick(
     projections_filename: str,
     contours_out_filename: str,
-    contours_in_filename: str = None,
-    model_in_filename: str = None,
+    contours_in_filename: str | None = None,
+    model_in_filename: str | None = None,
 ):
     """
     Pick the fiduccials manually
 
     """
-    import napari
+    import napari  # type: ignore
 
     def read_projections(filename):
         print("Reading projections from %s" % filename)

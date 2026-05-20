@@ -9,7 +9,7 @@ import time
 from argparse import ArgumentParser
 from typing import List
 
-import mrcfile
+import mrcfile  # type: ignore
 import numpy as np
 
 __all__ = ["stack_rot90"]
@@ -23,7 +23,7 @@ def get_description():
     return "Rotate the stack"
 
 
-def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
+def get_parser(parser: ArgumentParser | None = None) -> ArgumentParser:
     """
     Get the stack rot90 parser
 
@@ -93,7 +93,7 @@ def stack_rot90_impl(args):
     print("Time taken: %.2f seconds" % (time.time() - start_time))
 
 
-def stack_rot90(args: List[str] = None):
+def stack_rot90(args: List[str] | None = None):
     """
     Rotate the stack
 

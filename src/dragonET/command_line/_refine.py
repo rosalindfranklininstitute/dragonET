@@ -30,7 +30,7 @@ def get_description():
     return "Refine a model to align the projection images"
 
 
-def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
+def get_parser(parser: ArgumentParser | None = None) -> ArgumentParser:
     """
     Get the refine parser
 
@@ -170,7 +170,7 @@ def refine_impl(args):
     print("Time taken: %.2f seconds" % (time.time() - start_time))
 
 
-def refine(args: List[str] = None):
+def refine(args: List[str] | None = None):
     """
     Refine the model of the sample and align the images
 
@@ -671,7 +671,7 @@ def refine_model(
     # bounds = get_bounds(dx, dy, a, b, c, active)
 
     # Perform the least squares minimisation
-    result = scipy.optimize.least_squares(
+    result = scipy.optimize.least_squares(  # type: ignore
         fun,
         params,
         args=args,
@@ -698,12 +698,12 @@ def _refine(
     model_in: str,
     model_out: str,
     contours: str,
-    plots_out: str = None,
-    info_out: str = None,
-    fix: str = None,
+    plots_out: str | None = None,
+    info_out: str | None = None,
+    fix: str | None = None,
     max_iter: int = 100,
     smoothness: float = 10,
-    reference_image: int = None,
+    reference_image: int | None = None,
     verbose: bool = False,
 ):
     """
