@@ -25,7 +25,7 @@ def get_description():
     return "Make a video from a set of projections"
 
 
-def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
+def get_parser(parser: ArgumentParser | None = None) -> ArgumentParser:
     """
     Get the new parser
 
@@ -110,7 +110,7 @@ def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
     return parser
 
 
-def make_video_impl(args):
+def make_video_impl(args) -> None:
     """
     Import the experimental description
 
@@ -135,7 +135,7 @@ def make_video_impl(args):
     print("Time taken: %.2f seconds" % (time.time() - start_time))
 
 
-def make_video(args: List[str] = None):
+def make_video(args: List[str] | None = None):
     """
     Make a video from a set of projections
 
@@ -210,7 +210,7 @@ def _make_video(
     summed: int = 1,
     scaled_vmin: int = 0,
     scaled_vmax: int = 255,
-):
+) -> None:
     """
     Make a video
 
@@ -235,21 +235,19 @@ def _make_video(
     s1 = 255.0 / (vmax - vmin)
     s0 = -s1 * vmin
 
+    data = data * s1 + s0
+
+    t1 = 255.0 / (scaled_vmax - scaled_vmin)
+    t0 = -t1 * scaled_vmin
+
+    data = data * t1 + t0
+    data = np.clip(data, 0, 255).astype(np.uint8)
+
     try:
         writer = imageio.get_writer(
             movie_filename, format="FFMPEG", mode="I", fps=fps, codec="libx264"
         )
-        for i in range(data.shape[0]):
-            image = data[i] * s1 + s0
-            image = np.clip(image, 0, 255)
-
-            vmin = scaled_vmin
-            vmax = scaled_vmax
-            t1 = 255.0 / (vmax - vmin)
-            t0 = -t1 * vmin
-            image = image * t1 + t0
-            image = np.clip(image, 0, 255)
-            image = image.astype(np.uint8)
+        for image in data:
             writer.append_data(image)
     finally:
         writer.close()
