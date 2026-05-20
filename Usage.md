@@ -49,7 +49,7 @@ To quickly process your data, here is a minimal workflow:
 # 1. Import your data
 dragonET.new -p projections.mrc -a angles.rawtlt
 
-# 2. Track features automatically  
+# 2. Track features automatically
 dragonET.track -p projections.mrc --model_in initial_model.yaml
 
 # 3. Refine the geometry model
@@ -65,20 +65,20 @@ This will produce a reconstructed volume in `volume.mrc`.
 
 The typical workflow for pillar reconstruction with dragonET follows these steps:
 
-1. dragonET.new - Import the initial model
-2. dragonET.track - Find features across images 
-3. dragonET.refine - Refine the geometric model 
-4. dragonET.stack.rebin - Rebin the stack prior to performing reconstruction
-5. dragonET.stack.transform - Create an aligned stack for inspection
-6. dragonET.reconstruct - Reconstuct the initial volume
-7. dragonET.volume.select_sample_axis - Align the pillar axis with the volume
-8. dragonET.reconstruct - Reconstruct the volume with the aligned pillar axis
+1. `dragonET.new` - Import the initial model
+2. `dragonET.track` - Find features across images
+3. `dragonET.refine` - Refine the geometric model
+4. `dragonET.stack.rebin` - Rebin the stack prior to performing reconstruction
+5. `dragonET.stack.transform` - Create an aligned stack for inspection
+6. `dragonET.reconstruct` - Reconstuct the initial volume
+7. `dragonET.volume.select_sample_axis` - Align the pillar axis with the volume
+8. `dragonET.reconstruct` - Reconstruct the volume with the aligned pillar axis
 
 If the automated alignment does not work well, it may be necessary to perform
 manual feature picking. This can be done as follows:
 
-9. dragonET.contours.pick - Manually pick features across images
-10. dragonET.refine - Refine the geometric model.
+9. `dragonET.contours.pick` - Manually pick features across images
+10. `dragonET.refine` - Refine the geometric model.
 
 Then the same reconstruction steps can be applied to the manually picked model.
 
@@ -372,15 +372,15 @@ Projections + Angles
         dragonET.reconstruct → Manual Reconstruction
 ```
 
-## Command Line Programs
+# Command Line Programs
 
 All dragonET command line programs follow a similar naming convention and can be accessed using the `dragonET.program_name --help` syntax for detailed usage information.
 
-### Main Workflow Programs
+## Main Workflow Programs
 
 These are the core programs used in the typical reconstruction workflow:
 
-#### dragonET.new
+### dragonET.new
 
 **Description:** Import experimental description and create initial model
 
@@ -395,7 +395,7 @@ dragonET.new -p PROJECTIONS -a ANGLES [-m MODEL] [-r GLOBAL_ROTATION]
 - `-m, --model`: A YAML file describing the initial model (default: "initial_model.yaml")
 - `-r, --global_rotation`: The global in plane rotation (degrees) (default: 0)
 
-#### dragonET.track
+### dragonET.track
 
 **Description:** Automatically track features across projection images using SIFT
 
