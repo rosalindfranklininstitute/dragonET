@@ -13,6 +13,8 @@ ENV UV_PYTHON_INSTALL_DIR=/python
 # Only use the managed Python version
 ENV UV_PYTHON_PREFERENCE=only-managed
 
+COPY . /app
+
 WORKDIR /app
 
 RUN apt-get update && apt-get install git --assume-yes
@@ -20,15 +22,13 @@ RUN apt-get update && apt-get install git --assume-yes
 # Install dependencies
 RUN --mount=type=cache,target=/root/.cache/uv \
   --mount=type=bind,source=uv.lock,target=uv.lock \
-  --mount=type=bind,rw,source=.,target=/app \
   uv sync --locked --no-install-project --no-editable
 
 # Sync the project
-RUN --mount=type=bind,rw,source=.,target=/app \
-  --mount=type=cache,target=/root/.cache/uv \
+RUN --mount=type=cache,target=/root/.cache/uv \
   uv sync --locked --no-editable
 
-RUN | bash -c "if [ ! -d '/app/.venv' ]; then; exit 5; fi"
+RUN bash -c "if [ ! -d '/app/.venv' ]; then; exit 5; fi"
 
 FROM nvidia/cuda:11.8.0-runtime-ubuntu22.04
 
