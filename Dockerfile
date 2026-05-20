@@ -15,6 +15,8 @@ ENV UV_PYTHON_PREFERENCE=only-managed
 
 WORKDIR /app
 
+RUN apt-get update && apt-get install git --assume-yes
+
 # Install dependencies
 RUN --mount=type=cache,target=/root/.cache/uv \
   --mount=type=bind,source=uv.lock,target=uv.lock \
@@ -23,7 +25,6 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 # Sync the project
 RUN --mount=type=bind,rw,source=.,target=/app \
-  --mount=type=bind,source=.git,target=.git \
   --mount=type=cache,target=/root/.cache/uv \
   uv sync --locked --no-editable
 
@@ -34,8 +35,6 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Setup a non-root
 RUN groupadd --system --gid 999 nonroot \
   && useradd --system --gid 999 --uid 999 --create-home nonrootpo
-
-RUN apt-get update && apt-get install git --assume-yes
 
 # Copy the Python version
 COPY --from=builder /python /python
