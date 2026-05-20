@@ -13,19 +13,16 @@ ENV UV_PYTHON_INSTALL_DIR=/python
 # Only use the managed Python version
 ENV UV_PYTHON_PREFERENCE=only-managed
 
-# Copy the project into the intermediate image
-COPY . /app
-
 WORKDIR /app
 
 # Install dependencies
 RUN --mount=type=cache,target=/root/.cache/uv \
   --mount=type=bind,source=uv.lock,target=uv.lock \
-  --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+  --mount=type=bind,rw,source=.,target=/app
   uv sync --locked --no-install-project --no-editable
 
 # Sync the project
-RUN --mount=source=.git,target=/app/.git,type=bind \
+RUN --mount=type=bind,rw,source=.,target=/app \
   --mount=type=cache,target=/root/.cache/uv \
   uv sync --locked --no-editable
 
