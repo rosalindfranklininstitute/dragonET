@@ -21,12 +21,12 @@ RUN apt-get update && apt-get install git --assume-yes
 RUN --mount=type=cache,target=/root/.cache/uv \
   --mount=type=bind,source=uv.lock,target=uv.lock \
   --mount=type=bind,rw,source=.,target=/app \
-  uv sync --locked --no-install-project --no-editable
+  uv sync --locked --no-install-project --no-editable --extra cu118
 
 # Sync the project
 RUN --mount=type=bind,rw,source=.,target=/app \
   --mount=type=cache,target=/root/.cache/uv \
-  uv sync --locked --no-editable
+  uv sync --locked --no-editable --extra cu118
 
 FROM nvidia/cuda:11.8.0-runtime-ubuntu22.04
 
