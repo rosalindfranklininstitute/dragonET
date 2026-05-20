@@ -2,16 +2,13 @@
 FROM python:3.12-slim AS builder
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy UV_SYSTEM_PYTHON=1 UV_PYTHON_DOWNLOADS=0
+ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
+
+# Use the system Python across both stages
+ENV UV_PYTHON_DOWNLOADS=0
 
 # Omit development dependencies
 ENV UV_NO_DEV=1
-
-# Configure the Python directory so it is consistent
-ENV UV_PYTHON_INSTALL_DIR=/python
-
-# Only use the managed Python version
-ENV UV_PYTHON_PREFERENCE=only-managed
 
 WORKDIR /app
 
@@ -35,9 +32,6 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Setup a non-root
 RUN groupadd --system --gid 999 nonroot \
   && useradd --system --gid 999 --uid 999 --create-home nonrootpo
-
-# Copy the Python version
-COPY --from=builder /python /python
 
 # Copy the environment, but not the source code
 COPY --from=builder --chown=nonroot:nonroot /app/.venv /app/.venv
