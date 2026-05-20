@@ -83,7 +83,7 @@ dragonET.new -p /path/to/projections.mrc -a angles.rawtlt
 **Details:**
 - Creates an initial geometric model describing your experimental setup
 - The model contains no offsets or rotations unless a global rotation is specified
-- If you know that the tilt axis is offset by a certain amount (for example 90 degrees) you shold set the global rotation here
+- If you know that the tilt axis is offset by a certain amount (for example 90 degrees) you should set the global rotation here
 - This YAML file serves as the foundation for all subsequent processing steps
 
 ### Step 2: Feature Tracking
