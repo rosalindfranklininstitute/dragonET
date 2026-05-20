@@ -54,6 +54,7 @@ dependencies = [
   "scipy",
   "torch",
   "astra-toolbox",
+  "imageio[ffmpeg]>=2.37.3",
 ]
 
 dynamic = [
@@ -169,6 +170,7 @@ explicit = true
 "dragonET.stack.transform" = "dragonET.command_line:stack_transform"
 "dragonET.volume.rebin" = "dragonET.command_line:volume_rebin"
 "dragonET.volume.select_sample_axis" = "dragonET.command_line:volume_select_sample_axis"
+"dragonET.make_video" = "dragonET.command_line:make_video"
 
 #
 # Configure setup tools
