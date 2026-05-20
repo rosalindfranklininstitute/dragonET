@@ -23,6 +23,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 # Sync the project
 RUN --mount=type=bind,rw,source=.,target=/app \
+  --mount=type=bind,source=.git,target=.git \
   --mount=type=cache,target=/root/.cache/uv \
   uv sync --locked --no-editable
 
@@ -30,7 +31,7 @@ FROM nvidia/cuda:11.8.0-runtime-ubuntu22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Setup a non-root user
+# Setup a non-root
 RUN groupadd --system --gid 999 nonroot \
   && useradd --system --gid 999 --uid 999 --create-home nonrootpo
 
