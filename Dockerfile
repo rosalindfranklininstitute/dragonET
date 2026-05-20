@@ -20,6 +20,7 @@ RUN apt-get update && apt-get install git --assume-yes
 # Install dependencies
 RUN --mount=type=cache,target=/root/.cache/uv \
   --mount=type=bind,source=uv.lock,target=uv.lock \
+  --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
   uv sync --locked --no-install-project --no-editable --extra cu118
 
 # Sync the project
