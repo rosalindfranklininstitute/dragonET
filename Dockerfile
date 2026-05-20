@@ -25,7 +25,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
   uv sync --locked --no-install-project --no-editable
 
 # Sync the project
-RUN --mount=type=cache,target=/root/.cache/uv \
+RUN --mount=source=.git,target=.git,type=bind --mount=type=cache,target=/root/.cache/uv \
   uv sync --locked --no-editable
 
 FROM nvidia/cuda:11.8.0-runtime-ubuntu22.04
