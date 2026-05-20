@@ -16,11 +16,29 @@ This document provides a usage guide for the dragonET command line programs to p
 
 ## Installation
 
+In order to install dragonET first ensure that uv is installed by following the
+instructions [here](https://docs.astral.sh/uv/getting-started/installation/).
+
+Now clone the repository from github and install as follows:
+
 ```bash
+# First clone the repository onto your machine
 git clone https://github.com/rosalindfranklininstitute/dragonET.git
+
+# Change directory into the dragonET repository
 cd dragonET
+
+# Now we setup a virtual environment with uv
 uv venv
+
+# We can now install the package as follows
 uv pip install .
+
+# Now source the virtual environment to access the dragonET commands
+source .venv/bin/activate
+
+# Verify that the dragonET commands are now accessible
+dragonET.new --help
 ```
 
 ## Quick Start
