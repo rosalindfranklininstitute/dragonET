@@ -20,8 +20,6 @@ name = "dragonET"
 
 description = "Dodgy Reconstruction and Alignment of General OrientatioNs for Electron Tomography"
 
-readme = "README.md"
-
 requires-python = ">=3.10"
 
 license = { file = "LICENSE" }
@@ -60,6 +58,7 @@ dependencies = [
 
 dynamic = [
   "version",
+  "readme",
 ]
 
 #
@@ -180,19 +179,12 @@ where = [
   "src",
 ]
 
-#
-# Set the package version from git tag
-#
 [tool.setuptools.dynamic]
+readme = { file = "README.md", content-type = "text/markdown" }
 
-version = { attr = "dragonET._version.__version__" }
-
-#
-# Configure setuptools-scm to generate version file
-#
 [tool.setuptools_scm]
-
-write_to = "src/dragonET/_version.py"
+version_file = "src/dragonET/_version.py"
+version_scheme = "release-branch-semver"
 
 #
 # Configure pytest
