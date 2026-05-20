@@ -36,10 +36,10 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN groupadd --system --gid 999 nonroot \
   && useradd --system --gid 999 --uid 999 --create-home nonrootpo
 
+RUN mkdir /app
+
 # Copy the Python version
 COPY --from=builder /python /python
-
-WORKDIR /app
 
 # Copy the environment, but not the source code
 COPY --from=builder --chown=nonroot:nonroot /app/.venv /app/.venv
@@ -49,3 +49,5 @@ ENV PATH=/app/venv/bin:$PATH
 
 # Use the non-root user to run our application
 USER nonroot
+
+WORKDIR /app
