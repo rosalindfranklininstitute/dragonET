@@ -2,7 +2,7 @@
 FROM python:3.12-slim AS builder
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy UV_SYSTEM_PYTHON=1
+ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy UV_PYTHON_DOWNLOADS=0
 
 # Omit development dependencies
 ENV UV_NO_DEV=1
@@ -20,7 +20,6 @@ RUN apt-get update && apt-get install git --assume-yes
 # Install dependencies
 RUN --mount=type=cache,target=/root/.cache/uv \
   --mount=type=bind,source=uv.lock,target=uv.lock \
-  --mount=type=bind,rw,source=.,target=/app \
   uv sync --locked --no-install-project --no-editable --extra cu118
 
 # Sync the project
@@ -39,8 +38,11 @@ RUN groupadd --system --gid 999 nonroot \
 # Copy the Python version
 COPY --from=builder /python /python
 
+# Copy the environment, but not the source code
+COPY --from=builder --chown=nonroot:nonroot /app/.venv /app/.venv
+
 # Place executables in the environment at the front of the path
-ENV PATH=/python/bin:$PATH
+ENV PATH=/app/.venv/bin:$PATH
 
 # Use the non-root user to run our application
 USER nonroot
