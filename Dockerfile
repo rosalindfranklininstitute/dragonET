@@ -28,7 +28,12 @@ RUN --mount=type=bind,rw,source=.,target=/app \
   --mount=type=cache,target=/root/.cache/uv \
   uv sync --locked --no-editable
 
-RUN ls -la /app
+RUN |
+  if [ -d /app/.venv ]; then
+    echo "/app/.venv exists."
+  else
+    exit 5
+  fi
 
 FROM nvidia/cuda:11.8.0-runtime-ubuntu22.04
 
