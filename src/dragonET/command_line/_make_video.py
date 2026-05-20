@@ -235,19 +235,18 @@ def _make_video(
     s1 = 255.0 / (vmax - vmin)
     s0 = -s1 * vmin
 
-    data = data * s1 + s0
-
     t1 = 255.0 / (scaled_vmax - scaled_vmin)
     t0 = -t1 * scaled_vmin
-
-    data = data * t1 + t0
-    data = np.clip(data, 0, 255).astype(np.uint8)
 
     try:
         writer = imageio.get_writer(
             movie_filename, format="FFMPEG", mode="I", fps=fps, codec="libx264"
         )
         for image in data:
+            image = image * s1 + s0
+            image = image * t1 + t0
+            image = np.clip(image, 0, 255).astype(np.uint8)
+
             writer.append_data(image)
     finally:
         writer.close()
