@@ -18,7 +18,7 @@ WORKDIR /app
 # Install dependencies
 RUN --mount=type=cache,target=/root/.cache/uv \
   --mount=type=bind,source=uv.lock,target=uv.lock \
-  --mount=type=bind,rw,source=.,target=/app
+  --mount=type=bind,rw,source=.,target=/app \
   uv sync --locked --no-install-project --no-editable
 
 # Sync the project
