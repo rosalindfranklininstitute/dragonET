@@ -6,6 +6,7 @@
 # Author: James Parkhurst
 #
 from collections import defaultdict
+import typing
 
 import mrcfile  # type: ignore[import-untyped]
 import numpy as np
@@ -47,7 +48,7 @@ def rebin_stack(data: np.ndarray, factor: int) -> np.ndarray:
     return data
 
 
-def extract_features(projections, rebin_factor):
+def extract_features(projections, rebin_factor) -> list[dict[str, typing.Any]]:
     # Get the rebin factor octave
     np.log2(rebin_factor).astype(int)
 
