@@ -32,9 +32,18 @@ def _generate_angles(
     # Load the projections data
     projections_file = read_projections(projections_filename)
 
-    # Generate some angles
-    step = 180 / (projections_file.data.shape[0] - 1)
-    angles = -90 + step * np.arange(projections_file.data.shape[0])
+    # Check the header for the extended header. If the extended header exists
+    # then use the angles as the rawtlt angles, otherwise, lets just assume
+    # that the angular range is 180 degrees.
+    if projections_file.header.exttyp in [b"FEI1", b"FEI2"]:
+        assert len(projections_file.indexed_extended_header.shape) == 1
+        assert projections_file.indexed_extended_header.shape[0] == projections_file.data.shape[0]
+        extended_header = projections_file.indexed_extended_header
+        angles = extended_header["Alpha tilt"]
+    else:
+        print("WARNING: Assuming ±90 angular range")
+        step = 180 / (projections_file.data.shape[0] - 1)
+        angles = -90 + step * np.arange(projections_file.data.shape[0])
 
     # Write out the angles
     write_angles(angles_filename, angles)
