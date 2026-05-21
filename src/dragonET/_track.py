@@ -70,26 +70,17 @@ def _detect_and_extract(projection, descriptor_extractor, image_size, i, counter
 
 
 def extract_features(projections, rebin_factor, threads) -> list[dict[str, typing.Any]]:
-    # Get the rebin factor octave
-    np.log2(rebin_factor).astype(int)
-
+    # Get the rebin factor octave:
     # Get the image size
     image_size = np.array(projections.shape[1:])
 
-    # Initialise the list of SIFT objects
-    SIFTs = [
-        SIFT(upsampling=1, n_scales=32, n_octaves=32, n_hist=32, n_ori=32)
-        for _ in range(threads)
-        ]
-
-    # projections are mapped to an index of each SIFT in tuples for starmap
-    # projection_indexes = [i for i in range(projections.shape[0])]
-    SIFT_indexes = [i % len(SIFTs) for i in range(projections.shape[0])]
-    projection_SIFT_pairs = [(projections[i], SIFTs[SIFT_item], image_size, i, projections.shape[0]) for i, SIFT_item in enumerate(SIFT_indexes)]
+    # initialise SIFT parameters, and format starmap inputs
+    sift = SIFT(upsampling=1, n_scales=32, n_octaves=32, n_hist=32, n_ori=32)
+    projection_SIFT_pairs = [(projections[i], sift, image_size, i, projections.shape[0]) for i in range(projections.shape[0])]
 
     features = []
 
-    # pool aatempt
+    # multiprocessing starmap of the detect and extract function for speed
     with Pool(processes=threads) as p:
         features = p.starmap(_detect_and_extract, projection_SIFT_pairs)
 
