@@ -10,14 +10,13 @@ import os
 from argparse import ArgumentParser, Namespace
 from typing import List
 
-
-from dragonET.command_line._new import _new
-from dragonET.command_line._track import _track
-from dragonET.command_line._generate_angles import _generate_angles
-from dragonET.command_line._reconstruct import _reconstruct
-from dragonET.command_line._refine import _refine
-from dragonET.command_line._stack_rebin import _stack_rebin
-from dragonET.command_line._stack_transform import _stack_transform
+from dragonET._new import _new
+from dragonET._track import _track
+from dragonET._generate_angles import _generate_angles
+from dragonET._reconstruct import _reconstruct
+from dragonET._refine import _refine
+from dragonET._stack_rebin import _stack_rebin
+from dragonET._stack_transform import _stack_transform
 
 
 __all__ = ["run"]
