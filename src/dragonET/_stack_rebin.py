@@ -5,101 +5,8 @@
 #
 # Author: James Parkhurst
 #
-import time
-from argparse import ArgumentParser
-from typing import List
-
 import mrcfile  # type: ignore[import-untyped]
 import numpy as np
-
-__all__ = ["stack_rebin"]
-
-
-def get_description():
-    """
-    Get the program description
-
-    """
-    return "Rebin the stack"
-
-
-def get_parser(parser: ArgumentParser | None = None) -> ArgumentParser:
-    """
-    Get the stack rebin parser
-
-    """
-
-    # Initialise the parser
-    if parser is None:
-        parser = ArgumentParser(description=get_description())
-
-    # Add some command line arguments
-    parser.add_argument(
-        "-i",
-        type=str,
-        default=None,
-        dest="projections_in",
-        required=True,
-        help=(
-            """
-            The filename for the input projection images
-            """
-        ),
-    )
-    parser.add_argument(
-        "-o",
-        type=str,
-        default="rebinned.mrc",
-        dest="projections_out",
-        required=False,
-        help=(
-            """
-            The filename for the output projection images
-            """
-        ),
-    )
-    parser.add_argument(
-        "-f",
-        "--factor",
-        type=int,
-        default=1,
-        dest="factor",
-        help=(
-            """
-            The rebin factor (must be a power of 2).
-            """
-        ),
-    )
-
-    return parser
-
-
-def stack_rebin_impl(args):
-    """
-    Rebin the stack
-
-    """
-
-    # Get the start time
-    start_time = time.time()
-
-    # Do the work
-    _stack_rebin(
-        args.projections_in,
-        args.projections_out,
-        args.factor,
-    )
-
-    # Write some timing stats
-    print("Time taken: %.2f seconds" % (time.time() - start_time))
-
-
-def stack_rebin(args: List[str] | None = None):
-    """
-    Rebin the stack
-
-    """
-    stack_rebin_impl(get_parser().parse_args(args=args))
 
 
 def rebin_stack(data: np.ndarray, factor: int) -> np.ndarray:
@@ -159,7 +66,3 @@ def _stack_rebin(
 
     # Write the projections
     write_projections(projections, projections_out)
-
-
-if __name__ == "__main__":
-    stack_rebin()

@@ -5,89 +5,8 @@
 #
 # Author: James Parkhurst
 #
-import time
-from argparse import ArgumentParser
-from typing import List
-
 import mrcfile  # type: ignore[import-untyped]
 import numpy as np
-
-
-__all__ = ["generate_angles"]
-
-
-def get_description():
-    """
-    Get the program description
-
-    """
-    return "Generate an angles.rawtlt file."
-
-
-def get_parser(parser: ArgumentParser | None = None) -> ArgumentParser:
-    """
-    Get the generate_angles parser
-
-    """
-
-    # Initialise the parser
-    if parser is None:
-        parser = ArgumentParser(description=get_description())
-
-    # Add some command line arguments
-    parser.add_argument(
-        "-p",
-        "--projections",
-        type=str,
-        default=None,
-        dest="projections",
-        required=True,
-        help=(
-            """
-            The projection images.
-            """
-        ),
-    )
-    parser.add_argument(
-        "-a",
-        "--angles",
-        type=str,
-        default="angles.rawtlt",
-        help=(
-            """
-            The angles in the rawtlt file.
-            """
-        ),
-    )
-
-    return parser
-
-
-def generate_angles_impl(args):
-    """
-    Generate an angles.rawtlt file.
-
-    """
-
-    # Get the start time
-    start_time = time.time()
-
-    # Do the work
-    _generate_angles(
-        args.projections,
-        args.angles,
-    )
-
-    # Write some timing stats
-    print("Time taken: %.2f seconds" % (time.time() - start_time))
-
-
-def generate_angles(args: List[str] | None = None):
-    """
-    Generate an angles.rawtlt file.
-
-    """
-    generate_angles_impl(get_parser().parse_args(args=args))
 
 
 def _generate_angles(

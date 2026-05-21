@@ -5,10 +5,7 @@
 #
 # Author: James Parkhurst
 #
-import time
-from argparse import ArgumentParser
 from collections import defaultdict
-from typing import List
 
 import mrcfile  # type: ignore[import-untyped]
 import numpy as np
@@ -18,106 +15,6 @@ from scipy.spatial.transform import Rotation
 from skimage.feature import SIFT, match_descriptors  # , plot_matches
 from skimage.measure import ransac
 from skimage.transform import EuclideanTransform
-
-__all__ = ["track"]
-
-
-def get_description():
-    """
-    Get the program description
-
-    """
-    return "Do a rough alignment of the projection images"
-
-
-def get_parser(parser: ArgumentParser | None = None) -> ArgumentParser:
-    """
-    Get the track parser
-
-    """
-
-    # Initialise the parser
-    if parser is None:
-        parser = ArgumentParser(description=get_description())
-
-    # Add some command line arguments
-    parser.add_argument(
-        "-p",
-        type=str,
-        default=None,
-        dest="projections_in",
-        required=True,
-        help=(
-            """
-            The filename for the projection images
-            """
-        ),
-    )
-    parser.add_argument(
-        "--model_in",
-        type=str,
-        default=None,
-        dest="model_in",
-        required=True,
-        help=(
-            """
-            A file describing the initial model.
-            """
-        ),
-    )
-    parser.add_argument(
-        "--model_out",
-        type=str,
-        default="tracked_model.yaml",
-        dest="model_out",
-        help=(
-            """
-            A file describing the output model.
-            """
-        ),
-    )
-    parser.add_argument(
-        "--contours",
-        type=str,
-        default="contours.npz",
-        dest="contours_out",
-        help=(
-            """
-            A binary file describing the contours.
-            """
-        ),
-    )
-
-    return parser
-
-
-def track_impl(args):
-    """
-    Do a rough alignment of the projection images
-
-    """
-
-    # Get the start time
-    start_time = time.time()
-
-    # Do the work
-    _track(
-        args.projections_in,
-        args.model_in,
-        args.model_out,
-        args.contours_out,
-    )
-
-    # Write some timing stats
-    print("Time taken: %.2f seconds" % (time.time() - start_time))
-
-
-def track(args: List[str] | None = None):
-    """
-    Do a rough alignment of the projection images
-
-    """
-    track_impl(get_parser().parse_args(args=args))
 
 
 def rebin_stack(data: np.ndarray, factor: int) -> np.ndarray:
@@ -572,7 +469,3 @@ def _track(
 
     # Write the contours to file
     write_contours(contours_out, data, mask, octave)
-
-
-if __name__ == "__main__":
-    track()

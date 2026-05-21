@@ -1,4 +1,4 @@
-from dragonET.command_line._make_video import _make_video
+from dragonET._make_video import _make_video
 import numpy as np
 import mrcfile  # type: ignore[import-untyped]
 import os.path

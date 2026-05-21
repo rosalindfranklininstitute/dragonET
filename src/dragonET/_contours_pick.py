@@ -5,119 +5,12 @@
 #
 # Author: James Parkhurst
 #
-import time
-from argparse import ArgumentParser
-from typing import List
-
 import mrcfile  # type: ignore[import-untyped]
 import numpy as np
 import yaml
 from scipy.spatial.transform import Rotation
 
 import dragonET
-
-__all__ = ["contours_pick"]
-
-
-def get_description():
-    """
-    Get the program description
-
-    """
-    return "Manually pick fiduccials"
-
-
-def get_parser(parser: ArgumentParser | None = None) -> ArgumentParser:
-    """
-    Get the pick parser
-
-    """
-
-    # Initialise the parser
-    if parser is None:
-        parser = ArgumentParser(description=get_description())
-
-    # Add some command line arguments
-    parser.add_argument(
-        "-p",
-        "--projections",
-        type=str,
-        default=None,
-        dest="projections",
-        required=True,
-        help=(
-            """
-            The projection images.
-            """
-        ),
-    )
-    parser.add_argument(
-        "-o",
-        "--contours_out",
-        type=str,
-        default="contours.npz",
-        dest="contours_out",
-        help=(
-            """
-            A YAML file describing the picked point coordinates.
-            """
-        ),
-    )
-    parser.add_argument(
-        "-i",
-        "--contours_in",
-        type=str,
-        default=None,
-        dest="contours_in",
-        help=(
-            """
-            A YAML file describing the picked point coordinates.
-            """
-        ),
-    )
-    parser.add_argument(
-        "-m",
-        "--model",
-        type=str,
-        default=None,
-        dest="model",
-        help=(
-            """
-            A YAML file describing the geometry model.
-            """
-        ),
-    )
-
-    return parser
-
-
-def contours_pick_impl(args):
-    """
-    Pick the fiduccials manually
-
-    """
-
-    # Get the start time
-    start_time = time.time()
-
-    # Do the work
-    _contours_pick(
-        args.projections,
-        args.contours_out,
-        args.contours_in,
-        args.model,
-    )
-
-    # Write some timing stats
-    print("Time taken: %.2f seconds" % (time.time() - start_time))
-
-
-def contours_pick(args: List[str] | None = None):
-    """
-    Pick the fiduccials manually
-
-    """
-    contours_pick_impl(get_parser().parse_args(args=args))
 
 
 def _contours_pick(

@@ -4,11 +4,6 @@
 # Copyright (C) 2024 Diamond Light Source and Rosalind Franklin Institute
 #
 # Author: James Parkhurst
-#
-import time
-from argparse import ArgumentParser
-from typing import List
-
 import mrcfile  # type: ignore[import-untyped]
 import numpy as np
 import scipy.ndimage
@@ -17,121 +12,6 @@ import yaml
 from scipy.spatial.transform import Rotation
 
 import dragonET.command_line
-
-__all__ = ["contours_extend"]
-
-
-def get_description():
-    """
-    Get the program description
-
-    """
-    return "Refine a model to align the projection images"
-
-
-def get_parser(parser: ArgumentParser | None = None) -> ArgumentParser:
-    """
-    Get the contours_extend parser
-
-    """
-
-    # Initialise the parser
-    if parser is None:
-        parser = ArgumentParser(description=get_description())
-
-    # Add some command line arguments
-    parser.add_argument(
-        "-p",
-        type=str,
-        default=None,
-        dest="projections_in",
-        required=True,
-        help=(
-            """
-            The filename for the projection images
-            """
-        ),
-    )
-    parser.add_argument(
-        "--contours_in",
-        type=str,
-        default=None,
-        dest="contours_in",
-        required=True,
-        help=(
-            """
-            A YAML file containing contour information.
-            """
-        ),
-    )
-    parser.add_argument(
-        "--model_in",
-        type=str,
-        default=None,
-        dest="model_in",
-        required=True,
-        help=(
-            """
-            A file describing the initial model. This file can either be a
-            .rawtlt file or a YAML file.
-            """
-        ),
-    )
-    parser.add_argument(
-        "--contours_out",
-        type=str,
-        default="extended.npz",
-        dest="contours_out",
-        help=(
-            """
-            A YAML file describing the refined model.
-            """
-        ),
-    )
-    parser.add_argument(
-        "-s",
-        "--subset_size",
-        type=int,
-        default=1,
-        dest="subset_size",
-        help=(
-            """
-            The size of the subset to use to predict adjacent images.
-            """
-        ),
-    )
-
-    return parser
-
-
-def contours_extend_impl(args):
-    """
-    Extend the contours
-
-    """
-
-    # Get the start time
-    start_time = time.time()
-
-    # Do the work
-    _contours_extend(
-        args.projections_in,
-        args.model_in,
-        args.contours_in,
-        args.contours_out,
-        args.subset_size,
-    )
-
-    # Write some timing stats
-    print("Time taken: %.2f seconds" % (time.time() - start_time))
-
-
-def contours_extend(args: List[str] | None = None):
-    """
-    Extend the contours
-
-    """
-    contours_extend_impl(get_parser().parse_args(args=args))
 
 
 def compute_derivatives(predicted, image):
@@ -357,7 +237,3 @@ def _contours_extend(
 
     # Write the contours
     write_points(contours_out, data, mask, octave)
-
-
-if __name__ == "__main__":
-    contours_extend()

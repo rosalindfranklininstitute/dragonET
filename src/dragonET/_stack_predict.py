@@ -5,119 +5,12 @@
 #
 # Author: James Parkhurst
 #
-import time
-from argparse import ArgumentParser
-from typing import List
-
 import mrcfile  # type: ignore[import-untyped]
 import numpy as np
 import yaml
 from scipy.spatial.transform import Rotation
 
 import dragonET.command_line
-
-__all__ = ["stack_predict"]
-
-
-def get_description():
-    """
-    Get the program description
-
-    """
-    return "Predict the stack images"
-
-
-def get_parser(parser: ArgumentParser | None = None) -> ArgumentParser:
-    """
-    Get the stack predict parser
-
-    """
-
-    # Initialise the parser
-    if parser is None:
-        parser = ArgumentParser(description=get_description())
-
-    # Add some command line arguments
-    parser.add_argument(
-        "-i",
-        type=str,
-        default=None,
-        dest="projections_in",
-        required=True,
-        help=(
-            """
-            The filename for the input projection images
-            """
-        ),
-    )
-    parser.add_argument(
-        "-o",
-        type=str,
-        default="predicted.mrc",
-        dest="projections_out",
-        required=False,
-        help=(
-            """
-            The filename for the output projection images
-            """
-        ),
-    )
-    parser.add_argument(
-        "--model_in",
-        type=str,
-        default=None,
-        dest="model_in",
-        required=True,
-        help=(
-            """
-            A file describing the initial model. This file can either be a
-            .rawtlt file or a YAML file.
-            """
-        ),
-    )
-    parser.add_argument(
-        "-s",
-        "--subset_size",
-        type=int,
-        default=1,
-        dest="subset_size",
-        help=(
-            """
-            The size of the subset to use to predict adjacent images.
-            """
-        ),
-    )
-
-    return parser
-
-
-def stack_predict_impl(args):
-    """
-    Predict the stack images
-
-    """
-
-    # Get the start time
-    start_time = time.time()
-
-    # Do the work
-    _stack_predict(
-        args.projections_in,
-        args.projections_out,
-        args.model_in,
-        args.subset_size,
-    )
-
-    # Write some timing stats
-    print("Time taken: %.2f seconds" % (time.time() - start_time))
-
-
-def stack_predict(args: List[str] | None = None):
-    """
-    Predict the stack images
-
-    """
-    stack_predict_impl(get_parser().parse_args(args=args))
 
 
 def get_matrix_from_parameters(P):
@@ -258,7 +151,3 @@ def _stack_predict(
 
     # Write the projections
     write_projections(projections, projections_out)
-
-
-if __name__ == "__main__":
-    stack_predict()

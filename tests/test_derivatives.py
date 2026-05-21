@@ -3,7 +3,7 @@ import pytest
 from scipy.optimize._numdiff import approx_derivative
 from scipy.spatial.transform import Rotation
 
-import dragonET.command_line
+from dragonET import _refine
 
 
 @pytest.fixture
@@ -59,9 +59,7 @@ def derivative_test_function(d_func, indices, simulated_data):
 
     def fun(x, parameters, active, W, M):
         parameters[active] = x
-        return dragonET.command_line._refine.residuals(
-            parameters, active, W, M, smoothness
-        )
+        return _refine.residuals(parameters, active, W, M, smoothness)
 
     def jac(x, parameters, active, W, M):
         parameters[active] = x
@@ -86,19 +84,19 @@ def derivative_test_function(d_func, indices, simulated_data):
 
 
 def test_d_dt(simulated_data):
-    derivative_test_function(dragonET.command_line._refine.d_dt, [0, 1], simulated_data)
+    derivative_test_function(_refine.d_dt, [0, 1], simulated_data)
 
 
 def test_d_da(simulated_data):
-    derivative_test_function(dragonET.command_line._refine.d_da, 2, simulated_data)
+    derivative_test_function(_refine.d_da, 2, simulated_data)
 
 
 def test_d_db(simulated_data):
-    derivative_test_function(dragonET.command_line._refine.d_db, 3, simulated_data)
+    derivative_test_function(_refine.d_db, 3, simulated_data)
 
 
 def test_d_dc(simulated_data):
-    derivative_test_function(dragonET.command_line._refine.d_dc, 4, simulated_data)
+    derivative_test_function(_refine.d_dc, 4, simulated_data)
 
 
 def test_jacobian(simulated_data):
@@ -116,15 +114,11 @@ def test_jacobian(simulated_data):
 
     def fun(x, parameters, active, W, M):
         parameters[active] = x
-        return dragonET.command_line._refine.residuals(
-            parameters, active, W, M, smoothness
-        )
+        return _refine.residuals(parameters, active, W, M, smoothness)
 
     def jac(x, parameters, active, W, M):
         parameters[active] = x
-        return dragonET.command_line._refine.jacobian(
-            parameters, active, W, M, smoothness
-        )
+        return _refine.jacobian(parameters, active, W, M, smoothness)
 
     x = parameters[active]
 

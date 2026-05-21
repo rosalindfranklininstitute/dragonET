@@ -5,124 +5,11 @@
 #
 # Author: James Parkhurst
 #
-import time
-from argparse import ArgumentParser
-from typing import List
-
-import astra  # type: ignore
+import astra
 import mrcfile  # type: ignore[import-untyped]
 import numpy as np
 import yaml
 from scipy.spatial.transform import Rotation
-
-__all__ = ["project"]
-
-
-def get_description() -> str:
-    """
-    Get the program description
-
-    """
-    return "Do the projection"
-
-
-def get_parser(parser: ArgumentParser | None = None) -> ArgumentParser:
-    """
-    Get the project parser
-
-    """
-
-    # Initialise the parser
-    if parser is None:
-        parser = ArgumentParser(description=get_description())
-
-    # Add some command line arguments
-    parser.add_argument(
-        "-m",
-        "--model",
-        type=str,
-        default=None,
-        dest="model",
-        required=True,
-        help=(
-            """
-            A file describing the initial model. This file can either be a
-            .rawtlt file or a YAML file.
-            """
-        ),
-    )
-    parser.add_argument(
-        "-v",
-        "--volume",
-        type=str,
-        default=None,
-        dest="volume",
-        required=True,
-        help=(
-            """
-            The volume to project from.
-            """
-        ),
-    )
-    parser.add_argument(
-        "-p",
-        "--projections",
-        type=str,
-        default="projections.mrc",
-        dest="projections",
-        help=(
-            """
-            The projection images.
-            """
-        ),
-    )
-    parser.add_argument(
-        "--pixel_size",
-        type=float,
-        default=1,
-        dest="pixel_size",
-        help="The pixel size relative to the voxel size",
-    )
-    parser.add_argument(
-        "--device",
-        type=str,
-        choices=["gpu", "gpu_and_host", "host"],
-        default="gpu",
-        dest="device",
-        help="The device settings to use",
-    )
-
-    return parser
-
-
-def project_impl(args):
-    """
-    Reconstruct the volume
-
-    """
-
-    # Get the start time
-    start_time = time.time()
-
-    # Do the work
-    _project(
-        args.volume,
-        args.model,
-        args.projections,
-        args.pixel_size,
-        args.device,
-    )
-
-    # Write some timing stats
-    print("Time taken: %.2f seconds" % (time.time() - start_time))
-
-
-def project(args: List[str] | None = None):
-    """
-    Reconstruct the volume
-
-    """
-    project_impl(get_parser().parse_args(args=args))
 
 
 def _prepare_astra_geometry(
@@ -350,7 +237,3 @@ def _project(
 
     # Create a new file with the projected images
     write_projections(projections_filename, projections)
-
-
-if __name__ == "__main__":
-    project()
