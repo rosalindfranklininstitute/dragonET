@@ -49,7 +49,7 @@ def rebin_stack(data: np.ndarray, factor: int) -> np.ndarray:
     return data
 
 
-def _detect_and_extract(projection, descriptor_extractor):  #ndarray, int
+def _detect_and_extract(projection, descriptor_extractor, image_size, i):  #ndarray, int
     descriptor_extractor.detect_and_extract(projection)
     # where is detector extractor
     print("making feature dict")
@@ -65,7 +65,7 @@ def _detect_and_extract(projection, descriptor_extractor):  #ndarray, int
 
     print(
         "Extracted %d features from image %d / %d"
-        % (len(descriptor_extractor.positions), i + 1, projections.shape[0])
+        % (len(descriptor_extractor.positions), i + 1, projection.shape[0])
     )
 
     return feature_dict
@@ -87,7 +87,7 @@ def extract_features(projections, rebin_factor, threads) -> list[dict[str, typin
     # projections are mapped to an index of each SIFT in tuples for starmap
     # projection_indexes = [i for i in range(projections.shape[0])]
     SIFT_indexes = [i % len(SIFTs) for i in range(projections.shape[0])]
-    projection_SIFT_pairs = [(projections[i], SIFTs[SIFT_item]) for i, SIFT_item in enumerate(SIFT_indexes)]
+    projection_SIFT_pairs = [(projections[i], SIFTs[SIFT_item], image_size, i) for i, SIFT_item in enumerate(SIFT_indexes)]
 
     features = []
 
