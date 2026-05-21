@@ -5,7 +5,7 @@
 #
 # Author: James Parkhurst
 #
-import astra
+import astra  # type: ignore[import-untyped]
 import mrcfile  # type: ignore[import-untyped]
 import numpy as np
 import yaml

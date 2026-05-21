@@ -145,9 +145,7 @@ def _contours_pick(
 
     def transform_stack(projections, matrix):
         print("Transforming stack")
-        return dragonET.command_line._stack_transform.transform_stack(
-            projections, matrix
-        )
+        return dragonET._stack_transform.transform_stack(projections, matrix)
 
     # Load the projections data
     projections = read_projections(projections_filename).data

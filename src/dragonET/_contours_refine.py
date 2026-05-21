@@ -1,4 +1,3 @@
-#
 # contours_refine.py
 #
 # Copyright (C) 2024 Diamond Light Source and Rosalind Franklin Institute
@@ -15,7 +14,7 @@ from scipy.spatial.transform import Rotation
 from skimage.measure import ransac
 from skimage.transform import EuclideanTransform
 
-import dragonET.command_line
+import dragonET
 
 
 def _refine_model(P, data, mask, image_size):
@@ -43,14 +42,14 @@ def _refine_model(P, data, mask, image_size):
     mask = mask[:, select]
     data = data[:, select]
 
-    dx, dy, a, b, c, rmsd = dragonET.command_line._refine.refine_model(
+    dx, dy, a, b, c, rmsd = dragonET._refine.refine_model(
         dx, dy, a, b, c, data, mask, active=active
     )
 
     active[3, :] = 1  # b
     active[3, idx] = 0  # b
 
-    dx, dy, a, b, c, rmsd = dragonET.command_line._refine.refine_model(
+    dx, dy, a, b, c, rmsd = dragonET._refine.refine_model(
         dx, dy, a, b, c, data, mask, active=active
     )
 
@@ -62,10 +61,10 @@ def _refine_model(P, data, mask, image_size):
 
 def _predict_image(projections, P, P_image):
     def _get_matrix_from_parameters(P):
-        return dragonET.command_line._stack_predict.get_matrix_from_parameters(P)
+        return dragonET._stack_predict.get_matrix_from_parameters(P)
 
     def _get_parameters_from_matrix(R):
-        return dragonET.command_line._stack_predict.get_parameters_from_matrix(R)
+        return dragonET._stack_predict.get_parameters_from_matrix(R)
 
     def _get_matrix(P, image_size):
         # Get the origin translation
@@ -109,7 +108,7 @@ def _predict_image(projections, P, P_image):
 
         # Transform image
         return np.mean(
-            dragonET.command_line._stack_transform.transform_stack(projections, matrix),
+            dragonET._stack_transform.transform_stack(projections, matrix),
             axis=0,
         )
 
@@ -121,10 +120,10 @@ def _predict_image(projections, P, P_image):
 
 def _predict_coordinates(data, mask, P, P_image, image_size):
     def _get_matrix_from_parameters(P):
-        return dragonET.command_line._stack_predict.get_matrix_from_parameters(P)
+        return dragonET._stack_predict.get_matrix_from_parameters(P)
 
     def _get_parameters_from_matrix(R):
-        return dragonET.command_line._stack_predict.get_parameters_from_matrix(R)
+        return dragonET._stack_predict.get_parameters_from_matrix(R)
 
     def _get_matrix(P, image_size):
         # Get the origin translation
