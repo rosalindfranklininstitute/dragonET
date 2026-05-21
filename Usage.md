@@ -38,7 +38,7 @@ source .venv/bin/activate
 uv pip install .[napari] --torch-backend auto
 
 # Verify that the dragonET commands are now accessible
-dragonET.new --help
+dragonET new --help
 ```
 
 ## Quick Start
@@ -47,16 +47,16 @@ To quickly process your data, here is a minimal workflow:
 
 ```bash
 # 1. Import your data
-dragonET.new -p projections.mrc -a angles.rawtlt
+dragonET new -p projections.mrc -a angles.rawtlt
 
 # 2. Track features automatically
-dragonET.track -p projections.mrc --model_in initial_model.yaml
+dragonET track -p projections.mrc --model_in initial_model.yaml
 
 # 3. Refine the geometry model
-dragonET.refine --contours contours.npz --model_in initial_model.yaml --fix bc
+dragonET refine --contours contours.npz --model_in initial_model.yaml --fix bc
 
 # 4. Reconstruct the volume
-dragonET.reconstruct -p projections.mrc -m refined_model.yaml
+dragonET reconstruct -p projections.mrc -m refined_model.yaml
 ```
 
 This will produce a reconstructed volume in `volume.mrc`.
@@ -65,20 +65,20 @@ This will produce a reconstructed volume in `volume.mrc`.
 
 The typical workflow for pillar reconstruction with dragonET follows these steps:
 
-1. `dragonET.new` - Import the initial model
-2. `dragonET.track` - Find features across images
-3. `dragonET.refine` - Refine the geometric model
-4. `dragonET.stack.rebin` - Rebin the stack prior to performing reconstruction
-5. `dragonET.stack.transform` - Create an aligned stack for inspection
-6. `dragonET.reconstruct` - Reconstuct the initial volume
-7. `dragonET.volume.select_sample_axis` - Align the pillar axis with the volume
-8. `dragonET.reconstruct` - Reconstruct the volume with the aligned pillar axis
+1. `dragonET new` - Import the initial model
+2. `dragonET track` - Find features across images
+3. `dragonET refine` - Refine the geometric model
+4. `dragonET stack rebin` - Rebin the stack prior to performing reconstruction
+5. `dragonET stack transform` - Create an aligned stack for inspection
+6. `dragonET reconstruct` - Reconstuct the initial volume
+7. `dragonET volume select_sample_axis` - Align the pillar axis with the volume
+8. `dragonET reconstruct` - Reconstruct the volume with the aligned pillar axis
 
 If the automated alignment does not work well, it may be necessary to perform
 manual feature picking. This can be done as follows:
 
-9. `dragonET.contours.pick` - Manually pick features across images
-10. `dragonET.refine` - Refine the geometric model.
+9. `dragonET contours pick` - Manually pick features across images
+10. `dragonET refine` - Refine the geometric model.
 
 Then the same reconstruction steps can be applied to the manually picked model.
 
@@ -88,12 +88,12 @@ This section provides a step-by-step guide through the complete pillar reconstru
 
 ### Step 1: Import Experimental Data
 
-**Command:** `dragonET.new`
+**Command:** `dragonET new`
 
 The first step imports your projection images and tilt angles into the dragonET workflow:
 
 ```bash
-dragonET.new -p /path/to/projections.mrc -a angles.rawtlt
+dragonET new -p /path/to/projections.mrc -a angles.rawtlt
 ```
 
 **Output:** `initial_model.yaml`
@@ -106,17 +106,17 @@ dragonET.new -p /path/to/projections.mrc -a angles.rawtlt
 
 **Notes:**
 - You may not have an angles.rawtlt file available so you may need to generate
-  one yourself. This can be done using the `dragonET.generate_angles -p
+  one yourself. This can be done using the `dragonET generate_angles -p
   /path/to/projections.mrc` command.
 
 ### Step 2: Feature Tracking
 
-**Command:** `dragonET.track`
+**Command:** `dragonET track`
 
 Automatically extract and track features across all projection images:
 
 ```bash
-dragonET.track -p /path/to/projections.mrc --model_in initial_model.yaml
+dragonET track -p /path/to/projections.mrc --model_in initial_model.yaml
 ```
 
 **Output:** `contours.npz` and `tracked_model.yaml`
@@ -132,13 +132,13 @@ dragonET.track -p /path/to/projections.mrc --model_in initial_model.yaml
 
 ### Step 3: Model Refinement
 
-**Command:** `dragonET.refine`
+**Command:** `dragonET refine`
 
 Refine the geometric model using the tracked features:
 
 ```bash
 # First refinement pass - refine translations and in-plane rotations
-dragonET.refine --contours contours.npz --model_in initial_model.yaml --fix bc
+dragonET refine --contours contours.npz --model_in initial_model.yaml --fix bc
 ```
 
 **Output:** `refined_model.yaml`
@@ -152,7 +152,7 @@ For improved accuracy, run a second refinement allowing optimisation of out-of-p
 
 ```bash
 # Second refinement pass - allow refinement of out-of-plane rotations
-dragonET.refine --contours contours.npz --model_in refined_model.yaml --fix c --model_out refined_model_c.yaml
+dragonET refine --contours contours.npz --model_in refined_model.yaml --fix c --model_out refined_model_c.yaml
 ```
 
 **Output:** `refined_model_c.yaml`
@@ -163,12 +163,12 @@ dragonET.refine --contours contours.npz --model_in refined_model.yaml --fix c --
 
 ### Step 4: Tomographic Reconstruction
 
-**Command:** `dragonET.reconstruct`
+**Command:** `dragonET reconstruct`
 
 Perform the tomographic reconstruction:
 
 ```bash
-dragonET.reconstruct -p /path/to/projections.mrc -m refined_model_c.yaml
+dragonET reconstruct -p /path/to/projections.mrc -m refined_model_c.yaml
 ```
 
 **Output:** `volume.mrc`
@@ -180,12 +180,12 @@ dragonET.reconstruct -p /path/to/projections.mrc -m refined_model_c.yaml
 
 ### Step 5: Pillar Axis Alignment (Optional)
 
-**Command:** `dragonET.volume.select_sample_axis`
+**Command:** `dragonET volume select_sample_axis`
 
 Interactively align the pillar axis with volume axes:
 
 ```bash
-dragonET.volume.select_sample_axis -v volume.mrc -i refined_model_c.yaml -o realigned_model.yaml
+dragonET volume select_sample_axis -v volume.mrc -i refined_model_c.yaml -o realigned_model.yaml
 ```
 
 **Output:** `realigned_model.yaml`
@@ -202,12 +202,12 @@ dragonET.volume.select_sample_axis -v volume.mrc -i refined_model_c.yaml -o real
 
 ### Step 6: Final Reconstruction (Optional)
 
-**Command:** `dragonET.reconstruct`
+**Command:** `dragonET reconstruct`
 
 Reconstruct with the aligned pillar axis:
 
 ```bash
-dragonET.reconstruct -p /path/to/projections.mrc -m realigned_model.yaml -v realigned_volume.mrc
+dragonET reconstruct -p /path/to/projections.mrc -m realigned_model.yaml -v realigned_volume.mrc
 ```
 
 **Output:** `realigned_volume.mrc`
@@ -216,7 +216,7 @@ dragonET.reconstruct -p /path/to/projections.mrc -m realigned_model.yaml -v real
 Reduce volume size to improve signal-to-noise ratio by focusing on the pillar region:
 
 ```bash
-dragonET.reconstruct -p /path/to/projections.mrc -m realigned_model.yaml -v realigned_volume.mrc --volume_shape=2048,4096,2048
+dragonET reconstruct -p /path/to/projections.mrc -m realigned_model.yaml -v realigned_volume.mrc --volume_shape=2048,4096,2048
 ```
 
 This creates a tighter bounding box around the pillar, excluding vacuum regions.
@@ -227,12 +227,12 @@ If the automated feature tracking (Step 2) does not produce satisfactory results
 
 #### Step 2-Alt: Manual Feature Picking
 
-**Command:** `dragonET.contours.pick`
+**Command:** `dragonET contours pick`
 
 Manually select fiducial markers across projection images:
 
 ```bash
-dragonET.contours.pick -p /path/to/projections.mrc -o manually_picked_contours.npz
+dragonET contours pick -p /path/to/projections.mrc -o manually_picked_contours.npz
 ```
 
 **Output:** `manually_picked_contours.npz`
@@ -252,13 +252,13 @@ dragonET.contours.pick -p /path/to/projections.mrc -o manually_picked_contours.n
 
 #### Step 3-Alt: Refinement with Manual Contours
 
-**Command:** `dragonET.refine`
+**Command:** `dragonET refine`
 
 Refine the geometric model using manually picked features:
 
 ```bash
 # First refinement pass with manual contours
-dragonET.refine --contours manually_picked_contours.npz --model_in initial_model.yaml --fix bc --model_out manually_refined_model.yaml
+dragonET refine --contours manually_picked_contours.npz --model_in initial_model.yaml --fix bc --model_out manually_refined_model.yaml
 ```
 
 **Output:** `manually_refined_model.yaml`
@@ -272,19 +272,19 @@ For improved accuracy, run a second refinement:
 
 ```bash
 # Second refinement pass allowing tilt angle optimization
-dragonET.refine --contours manually_picked_contours.npz --model_in manually_refined_model.yaml --fix c --model_out manually_refined_model_c.yaml
+dragonET refine --contours manually_picked_contours.npz --model_in manually_refined_model.yaml --fix c --model_out manually_refined_model_c.yaml
 ```
 
 **Output:** `manually_refined_model_c.yaml`
 
 #### Step 4-Alt: Reconstruction with Manual Alignment
 
-**Command:** `dragonET.reconstruct`
+**Command:** `dragonET reconstruct`
 
 Perform reconstruction using the manually refined model:
 
 ```bash
-dragonET.reconstruct -p /path/to/projections.mrc -m manually_refined_model_c.yaml -v manual_reconstruction.mrc
+dragonET reconstruct -p /path/to/projections.mrc -m manually_refined_model_c.yaml -v manual_reconstruction.mrc
 ```
 
 **Output:** `manual_reconstruction.mrc`
@@ -297,12 +297,12 @@ dragonET.reconstruct -p /path/to/projections.mrc -m manually_refined_model_c.yam
 
 ### Step 7: Stack Rebinning (Optional)
 
-**Command:** `dragonET.stack.rebin`
+**Command:** `dragonET stack rebin`
 
 Reduce projection stack resolution for faster processing or memory constraints:
 
 ```bash
-dragonET.stack.rebin -i /path/to/projections.mrc -o rebinned_projections.mrc -f 2
+dragonET stack rebin -i /path/to/projections.mrc -o rebinned_projections.mrc -f 2
 ```
 
 **Output:** `rebinned_projections.mrc` (half resolution)
@@ -315,12 +315,12 @@ dragonET.stack.rebin -i /path/to/projections.mrc -o rebinned_projections.mrc -f 
 
 ### Step 8: Stack Transformation (Optional)
 
-**Command:** `dragonET.stack.transform`
+**Command:** `dragonET stack transform`
 
 Apply geometric transformations to create an aligned stack for inspection:
 
 ```bash
-dragonET.stack.transform -i /path/to/projections.mrc -o aligned_stack.mrc -m refined_model_c.yaml
+dragonET stack transform -i /path/to/projections.mrc -o aligned_stack.mrc -m refined_model_c.yaml
 ```
 
 **Output:** `aligned_stack.mrc`
@@ -338,21 +338,21 @@ dragonET.stack.transform -i /path/to/projections.mrc -o aligned_stack.mrc -m ref
 ```
 Projections + Angles
         ↓
-        dragonET.new → Initial Model
+        dragonET new → Initial Model
         ↓
-        dragonET.track → Tracked Model + Contours
+        dragonET track → Tracked Model + Contours
         ↓
-        dragonET.refine → Refined Model
+        dragonET refine → Refined Model
         ↓
-        dragonET.stack.rebin → Rebinned Stack (optional)
+        dragonET stack rebin → Rebinned Stack (optional)
         ↓
-        dragonET.stack.transform → Aligned Stack (optional)
+        dragonET stack transform → Aligned Stack (optional)
         ↓
-        dragonET.reconstruct → Volume
+        dragonET reconstruct → Volume
         ↓
-        dragonET.volume.select_sample_axis → Aligned Model
+        dragonET volume select_sample_axis → Aligned Model
         ↓
-        dragonET.reconstruct → Final Volume
+        dragonET reconstruct → Final Volume
 ```
 
 ### Manual Workflow (Alternative)
@@ -360,34 +360,34 @@ Projections + Angles
 ```
 Projections + Angles
         ↓
-        dragonET.new → Initial Model
+        dragonET new → Initial Model
         ↓
-        dragonET.contours.pick → Manual Contours
+        dragonET contours pick → Manual Contours
         ↓
-        dragonET.refine → Manually Refined Model
+        dragonET refine → Manually Refined Model
         ↓
-        dragonET.stack.rebin → Rebinned Stack (optional)
+        dragonET stack rebin → Rebinned Stack (optional)
         ↓
-        dragonET.stack.transform → Aligned Stack (optional)
+        dragonET stack transform → Aligned Stack (optional)
         ↓
-        dragonET.reconstruct → Manual Reconstruction
+        dragonET reconstruct → Manual Reconstruction
 ```
 
 # Command Line Programs
 
-All dragonET command line programs follow a similar naming convention and can be accessed using the `dragonET.program_name --help` syntax for detailed usage information.
+All dragonET command line programs follow a similar naming convention and can be accessed using the `dragonET --help` syntax for list of available commands and command groups. You can use the `--help` command to get further information about any subcommands too, for example `dragonET contours --help` will list the available contours commands and `dragonET contours pick --help` will list the available arguments.
 
 ## Main Workflow Programs
 
 These are the core programs used in the typical reconstruction workflow:
 
-### dragonET.new
+### dragonET new
 
 **Description:** Import experimental description and create initial model
 
 **Usage:**
 ```bash
-dragonET.new -p PROJECTIONS -a ANGLES [-m MODEL] [-r GLOBAL_ROTATION]
+dragonET new -p PROJECTIONS -a ANGLES [-m MODEL] [-r GLOBAL_ROTATION]
 ```
 
 **Arguments:**
@@ -396,13 +396,13 @@ dragonET.new -p PROJECTIONS -a ANGLES [-m MODEL] [-r GLOBAL_ROTATION]
 - `-m, --model`: A YAML file describing the initial model (default: "initial_model.yaml")
 - `-r, --global_rotation`: The global in plane rotation (degrees) (default: 0)
 
-### dragonET.track
+### dragonET track
 
 **Description:** Automatically track features across projection images using SIFT
 
 **Usage:**
 ```bash
-dragonET.track -p PROJECTIONS --model_in MODEL_IN [--model_out MODEL_OUT] [--contours CONTOURS]
+dragonET track -p PROJECTIONS --model_in MODEL_IN [--model_out MODEL_OUT] [--contours CONTOURS]
 ```
 
 **Arguments:**
@@ -411,13 +411,13 @@ dragonET.track -p PROJECTIONS --model_in MODEL_IN [--model_out MODEL_OUT] [--con
 - `--model_out`: A file describing the output model (default: "tracked_model.yaml")
 - `--contours`: A binary file describing the contours (default: "contours.npz")
 
-### dragonET.align
+### dragonET align
 
 **Description:** Perform rough alignment of projection images using multiple correlation
 
 **Usage:**
 ```bash
-dragonET.align -p PROJECTIONS --model_in MODEL_IN [--model_out MODEL_OUT] [--reference_image REFERENCE_IMAGE] [--max_shift MAX_SHIFT] [--max_iter MAX_ITER] [--max_images MAX_IMAGES] [--device DEVICE]
+dragonET align -p PROJECTIONS --model_in MODEL_IN [--model_out MODEL_OUT] [--reference_image REFERENCE_IMAGE] [--max_shift MAX_SHIFT] [--max_iter MAX_ITER] [--max_images MAX_IMAGES] [--device DEVICE]
 ```
 
 **Arguments:**
@@ -430,13 +430,13 @@ dragonET.align -p PROJECTIONS --model_in MODEL_IN [--model_out MODEL_OUT] [--ref
 - `--max_images`: Maximum number of images to use in multiple correlation (> 0) (default: 3)
 - `--device`: The device settings to use (choices: "gpu", "cpu") (default: "gpu")
 
-### dragonET.refine
+### dragonET refine
 
 **Description:** Refine alignment model using contour information
 
 **Usage:**
 ```bash
-dragonET.refine --contours CONTOURS --model_in MODEL_IN [--model_out MODEL_OUT] [--fix FIX] [--max_iter MAX_ITER] [--smoothness SMOOTHNESS] [--reference_image REFERENCE_IMAGE] [--plots_out PLOTS_OUT] [--info_out INFO_OUT] [-v]
+dragonET refine --contours CONTOURS --model_in MODEL_IN [--model_out MODEL_OUT] [--fix FIX] [--max_iter MAX_ITER] [--smoothness SMOOTHNESS] [--reference_image REFERENCE_IMAGE] [--plots_out PLOTS_OUT] [--info_out INFO_OUT] [-v]
 ```
 
 **Arguments:**
@@ -451,13 +451,13 @@ dragonET.refine --contours CONTOURS --model_in MODEL_IN [--model_out MODEL_OUT] 
 - `--info_out`: A YAML file containing refinement information
 - `-v`: Set verbose output
 
-### dragonET.project
+### dragonET project
 
 **Description:** Generate projection images from a volume using the geometric model
 
 **Usage:**
 ```bash
-dragonET.project -m MODEL -v VOLUME [-p PROJECTIONS] [--pixel_size PIXEL_SIZE] [--device DEVICE]
+dragonET project -m MODEL -v VOLUME [-p PROJECTIONS] [--pixel_size PIXEL_SIZE] [--device DEVICE]
 ```
 
 **Arguments:**
@@ -467,13 +467,13 @@ dragonET.project -m MODEL -v VOLUME [-p PROJECTIONS] [--pixel_size PIXEL_SIZE] [
 - `--pixel_size`: The pixel size relative to the voxel size (default: 1)
 - `--device`: The device settings to use (choices: "gpu", "gpu_and_host", "host") (default: "gpu")
 
-### dragonET.reconstruct
+### dragonET reconstruct
 
 **Description:** Perform tomographic reconstruction from aligned projections
 
 **Usage:**
 ```bash
-dragonET.reconstruct -p PROJECTIONS -m MODEL [-v VOLUME] [-i INITIAL_VOLUME] [--volume_shape SHAPE] [--pixel_size PIXEL_SIZE] [-n NUM_ITERATIONS] [--device DEVICE]
+dragonET reconstruct -p PROJECTIONS -m MODEL [-v VOLUME] [-i INITIAL_VOLUME] [--volume_shape SHAPE] [--pixel_size PIXEL_SIZE] [-n NUM_ITERATIONS] [--device DEVICE]
 ```
 
 **Arguments:**
@@ -490,13 +490,13 @@ dragonET.reconstruct -p PROJECTIONS -m MODEL [-v VOLUME] [-i INITIAL_VOLUME] [--
 
 Programs for working with contours and fiducial markers:
 
-### dragonET.contours.pick
+### dragonET contours pick
 
 **Description:** Manually pick fiducials from projection images
 
 **Usage:**
 ```bash
-dragonET.contours.pick -p PROJECTIONS -o CONTOURS_OUT [-i CONTOURS_IN] [-m MODEL]
+dragonET contours pick -p PROJECTIONS -o CONTOURS_OUT [-i CONTOURS_IN] [-m MODEL]
 ```
 
 **Arguments:**
@@ -505,13 +505,13 @@ dragonET.contours.pick -p PROJECTIONS -o CONTOURS_OUT [-i CONTOURS_IN] [-m MODEL
 - `-i, --contours_in`: Input contours file
 - `-m, --model`: A YAML file describing the geometry model
 
-### dragonET.contours.extend
+### dragonET contours extend
 
 **Description:** Extend contours to additional images based on existing contour information
 
 **Usage:**
 ```bash
-dragonET.contours.extend -p PROJECTIONS --contours_in CONTOURS_IN --model_in MODEL_IN [--contours_out CONTOURS_OUT] [-s SUBSET_SIZE]
+dragonET contours extend -p PROJECTIONS --contours_in CONTOURS_IN --model_in MODEL_IN [--contours_out CONTOURS_OUT] [-s SUBSET_SIZE]
 ```
 
 **Arguments:**
@@ -521,13 +521,13 @@ dragonET.contours.extend -p PROJECTIONS --contours_in CONTOURS_IN --model_in MOD
 - `--contours_out`: A YAML file describing the extended contours (default: "extended.npz")
 - `-s, --subset_size`: The subset size for contour extension (default: 1)
 
-### dragonET.contours.refine
+### dragonET contours refine
 
 **Description:** Refine contour positions to match features better across images
 
 **Usage:**
 ```bash
-dragonET.contours.refine -p PROJECTIONS --contours_in CONTOURS_IN --model_in MODEL_IN [--model_out MODEL_OUT] [--contours_out CONTOURS_OUT] [--num_macro_cycles NUM_MACRO_CYCLES]
+dragonET contours refine -p PROJECTIONS --contours_in CONTOURS_IN --model_in MODEL_IN [--model_out MODEL_OUT] [--contours_out CONTOURS_OUT] [--num_macro_cycles NUM_MACRO_CYCLES]
 ```
 
 **Arguments:**
@@ -538,13 +538,13 @@ dragonET.contours.refine -p PROJECTIONS --contours_in CONTOURS_IN --model_in MOD
 - `--contours_out`: A YAML file describing the refined contours (default: "refined.npz")
 - `--num_macro_cycles`: The number of macro cycles in the refinement (default: 1)
 
-### dragonET.contours.triangulate
+### dragonET contours triangulate
 
 **Description:** Triangulate contour points to create 3D model points
 
 **Usage:**
 ```bash
-dragonET.contours.triangulate --contours_in CONTOURS_IN --model_in MODEL_IN [--points_out POINTS_OUT]
+dragonET contours triangulate --contours_in CONTOURS_IN --model_in MODEL_IN [--points_out POINTS_OUT]
 ```
 
 **Arguments:**
@@ -556,13 +556,13 @@ dragonET.contours.triangulate --contours_in CONTOURS_IN --model_in MODEL_IN [--p
 
 Programs for manipulating projection stacks:
 
-### dragonET.stack.rebin
+### dragonET stack rebin
 
 **Description:** Rebin projection stack to reduce resolution
 
 **Usage:**
 ```bash
-dragonET.stack.rebin -i PROJECTIONS_IN -o PROJECTIONS_OUT -f FACTOR
+dragonET stack rebin -i PROJECTIONS_IN -o PROJECTIONS_OUT -f FACTOR
 ```
 
 **Arguments:**
@@ -570,13 +570,13 @@ dragonET.stack.rebin -i PROJECTIONS_IN -o PROJECTIONS_OUT -f FACTOR
 - `-o`: The filename for the output projection images (default: "rebinned.mrc")
 - `-f, --factor`: The rebinning factor (default: 1)
 
-### dragonET.stack.edit
+### dragonET stack edit
 
 **Description:** Edit projection stack by excluding specific images
 
 **Usage:**
 ```bash
-dragonET.stack.edit -i PROJECTIONS_IN -o PROJECTIONS_OUT [--exclude EXCLUDE]
+dragonET stack edit -i PROJECTIONS_IN -o PROJECTIONS_OUT [--exclude EXCLUDE]
 ```
 
 **Arguments:**
@@ -584,13 +584,13 @@ dragonET.stack.edit -i PROJECTIONS_IN -o PROJECTIONS_OUT [--exclude EXCLUDE]
 - `-o`: The filename for the output projection images (default: "edited.mrc")
 - `--exclude`: Comma-separated list of image indices (zero-indexed) to exclude
 
-### dragonET.stack.predict
+### dragonET stack predict
 
 **Description:** Predict projection images using the geometric model
 
 **Usage:**
 ```bash
-dragonET.stack.predict -i PROJECTIONS_IN -o PROJECTIONS_OUT --model_in MODEL_IN [-s SUBSET_SIZE]
+dragonET stack predict -i PROJECTIONS_IN -o PROJECTIONS_OUT --model_in MODEL_IN [-s SUBSET_SIZE]
 ```
 
 **Arguments:**
@@ -599,13 +599,13 @@ dragonET.stack.predict -i PROJECTIONS_IN -o PROJECTIONS_OUT --model_in MODEL_IN 
 - `--model_in`: A file describing the input model (required)
 - `-s, --subset_size`: The size of the subset to use to predict adjacent images (default: 1)
 
-### dragonET.stack.transform
+### dragonET stack transform
 
 **Description:** Transform projection stack using the geometric model
 
 **Usage:**
 ```bash
-dragonET.stack.transform -i PROJECTIONS_IN -o PROJECTIONS_OUT -m MODEL_IN
+dragonET stack transform -i PROJECTIONS_IN -o PROJECTIONS_OUT -m MODEL_IN
 ```
 
 **Arguments:**
@@ -613,13 +613,13 @@ dragonET.stack.transform -i PROJECTIONS_IN -o PROJECTIONS_OUT -m MODEL_IN
 - `-o`: The filename for the output projection images (default: "transformed.mrc")
 - `-m, --model`: A file describing the input model (required)
 
-### dragonET.stack.rot90
+### dragonET stack rot90
 
 **Description:** Rotate projection stack by 90 degree increments
 
 **Usage:**
 ```bash
-dragonET.stack.rot90 -i PROJECTIONS_IN -o PROJECTIONS_OUT -n NUMBER
+dragonET stack rot90 -i PROJECTIONS_IN -o PROJECTIONS_OUT -n NUMBER
 ```
 
 **Arguments:**
@@ -631,13 +631,13 @@ dragonET.stack.rot90 -i PROJECTIONS_IN -o PROJECTIONS_OUT -n NUMBER
 
 Programs for post-processing reconstructed volumes:
 
-### dragonET.volume.rebin
+### dragonET volume rebin
 
 **Description:** Rebin volume to reduce resolution
 
 **Usage:**
 ```bash
-dragonET.volume.rebin -i VOLUME_IN -o VOLUME_OUT -f FACTOR
+dragonET volume rebin -i VOLUME_IN -o VOLUME_OUT -f FACTOR
 ```
 
 **Arguments:**
@@ -645,13 +645,13 @@ dragonET.volume.rebin -i VOLUME_IN -o VOLUME_OUT -f FACTOR
 - `-o`: The filename for the output volume (default: "rebinned.mrc")
 - `-f, --factor`: The rebinning factor (default: 1)
 
-### dragonET.volume.select_sample_axis
+### dragonET volume select_sample_axis
 
 **Description:** Align pillar axis with volume axes using interactive selection
 
 **Usage:**
 ```bash
-dragonET.volume.select_sample_axis -v VOLUME -i MODEL_IN -o MODEL_OUT
+dragonET volume select_sample_axis -v VOLUME -i MODEL_IN -o MODEL_OUT
 ```
 
 **Arguments:**
@@ -668,14 +668,14 @@ dragonET.volume.select_sample_axis -v VOLUME -i MODEL_IN -o MODEL_OUT
 - Make sure you have the correct PyTorch version installed for your CUDA version.
 
 **Memory Issues:**
-- Rebinning data with `dragonET.stack.rebin` can reduce memory requirements.
+- Rebinning data with `dragonET stack rebin` can reduce memory requirements.
 
 **File Format Issues:**
 - Ensure input files are in the correct format (MRC for images, YAML for models).
 - Check that file paths are correct and accessible.
 
 **Napari Issues:**
-- If `dragonET.volume.select_sample_axis` or `dragonET.contours.pick` fail to open Napari, make sure you have Napari installed.
+- If `dragonET volume select_sample_axis` or `dragonET contours pick` fail to open Napari, make sure you have Napari installed.
 - Try running with `napari --info` to check your Napari installation.
 
 ### Getting Help
