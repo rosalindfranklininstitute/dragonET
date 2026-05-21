@@ -200,8 +200,8 @@ def align_single(X: torch.Tensor, Y: torch.Tensor) -> tuple:
     R = torch.sqrt(torch.einsum("ikl,ij,jkl->kl", c, Rxx_inv, c))
 
     # Find the maximum
-    shift = np.array(np.unravel_index(torch.argmax(R).cpu(), R.shape))
-    shift -= np.array(R.shape) // 2
+    shift = np.asarray(np.unravel_index(torch.argmax(R).cpu(), R.shape))
+    shift -= np.asarray(R.shape) // 2
 
     # Return the shift
     return R, shift
@@ -209,7 +209,7 @@ def align_single(X: torch.Tensor, Y: torch.Tensor) -> tuple:
 
 def select_reference_images(
     data: torch.Tensor, ref_index: int, max_images: int = 10
-) -> tuple:
+) -> tuple[torch.Tensor, np.ndarray]:
     """
     Select the N closest reference images to fit to
 
