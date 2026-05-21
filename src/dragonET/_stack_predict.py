@@ -10,7 +10,7 @@ import numpy as np
 import yaml
 from scipy.spatial.transform import Rotation
 
-import dragonET.command_line
+import dragonET._reconstruct
 
 
 def get_matrix_from_parameters(P):
@@ -85,7 +85,7 @@ def predict_image(data: np.ndarray, P_data: np.ndarray, P_image: np.ndarray):
     data = np.swapaxes(data, 0, 1).copy()
 
     # Reconstruct the volume from the input images
-    volume = dragonET.command_line._reconstruct.recon(
+    volume = dragonET._reconstruct.recon(
         data, P_data, volume, 1, np.array((0, 1, 0)), np.array((0, 0, 0)), 1, "gpu"
     )
 

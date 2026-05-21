@@ -11,7 +11,7 @@ import yaml
 
 from scipy.spatial.transform import Rotation
 
-import dragonET.command_line
+import dragonET._contours_triangulate
 
 
 def compute_derivatives(predicted, image):
@@ -53,9 +53,7 @@ def extend_contours_for_image(
     mask_image = np.zeros((1, mask.shape[1]))
 
     # Predict the image from the images
-    predicted = dragonET.command_line._stack_predict.predict_image(
-        stack, P_stack, P_image
-    )
+    predicted = dragonET._stack_predict.predict_image(stack, P_stack, P_image)
 
     # Compute the derivatives
     Ix, Iy, It = compute_derivatives(predicted, image)
@@ -156,9 +154,7 @@ def extend_contours_internal(projections, P, data, mask, octave, subset_size: in
     c = np.radians(P[:, 4])
 
     # Triangulate the 3D points
-    points = dragonET.command_line._contours_triangulate.triangulate(
-        dx, dy, a, b, c, data, mask
-    )
+    points = dragonET._contours_triangulate.triangulate(dx, dy, a, b, c, data, mask)
 
     # Copy input
     data = data.copy()

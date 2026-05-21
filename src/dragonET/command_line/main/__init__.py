@@ -10,6 +10,7 @@ from dragonET.command_line.main import (
     track,
     make_video,
     generate_angles,
+    run,
 )
 
 if typing.TYPE_CHECKING:
@@ -29,4 +30,5 @@ def get_modules() -> tuple[ModuleType, ...]:
         track,
         make_video,
         generate_angles,
+        run,
     )
