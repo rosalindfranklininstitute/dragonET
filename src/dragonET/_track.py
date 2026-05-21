@@ -6,6 +6,7 @@
 # Author: James Parkhurst
 #
 from collections import defaultdict
+import typing
 
 import mrcfile  # type: ignore[import-untyped]
 import numpy as np
@@ -47,7 +48,7 @@ def rebin_stack(data: np.ndarray, factor: int) -> np.ndarray:
     return data
 
 
-def extract_features(projections, rebin_factor):
+def extract_features(projections, rebin_factor) -> list[dict[str, typing.Any]]:
     # Get the rebin factor octave
     np.log2(rebin_factor).astype(int)
 
@@ -99,7 +100,7 @@ def extract_features(projections, rebin_factor):
     return features
 
 
-def find_matching_features(projections, features, min_samples=4):
+def find_matching_features(features, min_samples=4):
     # Initialise the transformation matrix for each image
     matrix = np.full((len(features), 3, 3), np.eye(3))
 
@@ -312,7 +313,7 @@ def track_first_and_last(projections, data, mask, octave, rebin_factor, min_samp
     features = extract_features(first_and_last_images, rebin_factor)
 
     # Find matching features and compute initial transform between images
-    _, match_list = find_matching_features(first_and_last_images, features, min_samples)
+    _, match_list = find_matching_features(features, min_samples)
 
     # Creat th new data matrix
     data2, mask2, octave2 = construct_data_matrix(features, match_list)
@@ -388,13 +389,19 @@ def track_stack(
     # the data like this and will not work well otherwise.
     rebinned_projections = rescale(rebin_stack(projections, rebin_factor))
 
+    # Get indexes for swapping between angle and projection orderings
+    angle_ordered_indexes = np.argsort(P[:, 4])
+    reverted_order_indexes = np.argsort(angle_ordered_indexes)
+
+    # Reorder rebinned projections and the transforms by angle
+    rebinned_projections = rebinned_projections[angle_ordered_indexes]
+    P = P[angle_ordered_indexes, ...]
+
     # Extract the image features
     features = extract_features(rebinned_projections, rebin_factor)
 
     # Find matching features and compute initial transform between images
-    matrix, match_list = find_matching_features(
-        rebinned_projections, features, min_samples
-    )
+    matrix, match_list = find_matching_features(features, min_samples)
 
     # Construct data matrix. This is a FxPx2 matrix containing the coordinates
     # of all points on all frames. The mask is a FxP matrix showing whether the
@@ -415,8 +422,13 @@ def track_stack(
     # Construct the model parameters
     P = construct_model(matrix, P)
 
-    # Return contours and the model parameters
-    return data, mask, octave, P
+    # Return contours and the model parameters in the original order
+    return (
+        data[reverted_order_indexes, ...],
+        mask[reverted_order_indexes, ...],
+        octave,
+        P[reverted_order_indexes, ...],
+    )
 
 
 def _track(
