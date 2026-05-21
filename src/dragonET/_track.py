@@ -388,6 +388,14 @@ def track_stack(
     # the data like this and will not work well otherwise.
     rebinned_projections = rescale(rebin_stack(projections, rebin_factor))
 
+    # Get indexes for swapping between angle and projection orderings
+    angle_ordered_indexes = np.argsort(P[:, 4])
+    reverted_order_indexes = np.argsort(angle_ordered_indexes)
+
+    # Reorder rebinned projections and the transforms by angle
+    rebinned_projections = rebinned_projections[angle_ordered_indexes]
+    P = P[angle_ordered_indexes, ...]
+
     # Extract the image features
     features = extract_features(rebinned_projections, rebin_factor)
 
@@ -415,8 +423,13 @@ def track_stack(
     # Construct the model parameters
     P = construct_model(matrix, P)
 
-    # Return contours and the model parameters
-    return data, mask, octave, P
+    # Return contours and the model parameters in the original order
+    return (
+        data[reverted_order_indexes, ...],
+        mask[reverted_order_indexes, ...],
+        octave,
+        P[reverted_order_indexes, ...],
+    )
 
 
 def _track(
