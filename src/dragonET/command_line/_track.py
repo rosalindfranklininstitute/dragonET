@@ -10,7 +10,7 @@ from argparse import ArgumentParser
 from collections import defaultdict
 from typing import List
 
-import mrcfile  # type: ignore
+import mrcfile  # type: ignore[import-untyped]
 import numpy as np
 import yaml
 

@@ -9,7 +9,7 @@ import time
 from argparse import ArgumentParser
 from typing import List
 
-import mrcfile  # type: ignore
+import mrcfile  # type: ignore[import-untyped]
 import numpy as np
 
 

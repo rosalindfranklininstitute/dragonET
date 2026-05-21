@@ -10,7 +10,7 @@ from argparse import ArgumentParser
 from typing import List
 
 import astra  # type: ignore
-import mrcfile  # type: ignore
+import mrcfile  # type: ignore[import-untyped]
 import numpy as np
 import yaml
 from scipy.spatial.transform import Rotation
