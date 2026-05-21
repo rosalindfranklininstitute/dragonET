@@ -49,10 +49,8 @@ def rebin_stack(data: np.ndarray, factor: int) -> np.ndarray:
     return data
 
 
-def _detect_and_extract(projection, descriptor_extractor, image_size, i):  #ndarray, int
+def _detect_and_extract(projection, descriptor_extractor, image_size, i, counter):  #ndarray, int
     descriptor_extractor.detect_and_extract(projection)
-    # where is detector extractor
-    print("making feature dict")
     feature_dict = {
         "keypoints": descriptor_extractor.positions[:, ::-1]
         / image_size[None, ::-1],
@@ -61,11 +59,11 @@ def _detect_and_extract(projection, descriptor_extractor, image_size, i):  #ndar
         "scales": descriptor_extractor.scales,  # + rebin_factor_octave,
         "orientations": descriptor_extractor.orientations,
         }
-    print("features made")
 
+    # it's not projection.shape[0]
     print(
         "Extracted %d features from image %d / %d"
-        % (len(descriptor_extractor.positions), i + 1, projection.shape[0])
+        % (len(descriptor_extractor.positions), i + 1, counter)
     )
 
     return feature_dict
@@ -87,7 +85,7 @@ def extract_features(projections, rebin_factor, threads) -> list[dict[str, typin
     # projections are mapped to an index of each SIFT in tuples for starmap
     # projection_indexes = [i for i in range(projections.shape[0])]
     SIFT_indexes = [i % len(SIFTs) for i in range(projections.shape[0])]
-    projection_SIFT_pairs = [(projections[i], SIFTs[SIFT_item], image_size, i) for i, SIFT_item in enumerate(SIFT_indexes)]
+    projection_SIFT_pairs = [(projections[i], SIFTs[SIFT_item], image_size, i, projections.shape[0]) for i, SIFT_item in enumerate(SIFT_indexes)]
 
     features = []
 
@@ -398,9 +396,7 @@ def track_stack(
     P = P[angle_ordered_indexes, ...]
 
     # Extract the image features
-    print("entering critical region")
     features = extract_features(rebinned_projections, rebin_factor, threads=threads)
-    print("leaving critical region")
 
     # Find matching features and compute initial transform between images
     matrix, match_list = find_matching_features(features, min_samples)
