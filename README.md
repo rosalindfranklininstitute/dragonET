@@ -2,8 +2,7 @@
 
 > **dragonET**: **D**odgy **R**econstruction and **A**lignment from **G**eneral **O**rientatio**N**s for **E**lectron **T**omography
 
-![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)
-[![Building](https://github.com/jmp1985/dragonET/actions/workflows/python-package.yml/badge.svg)](https://github.com/jmp1985/dragonET/actions/workflows/python-package.yml)
+[![Building](https://github.com/rosalindfranklininstitute/dragonET/actions/workflows/python-package.yml/badge.svg)](https://github.com/rosalindfranklininstitute/dragonET/actions/workflows/python-package.yml)
 
 ## Installation
 
@@ -22,9 +21,13 @@ You can run the package tests by running the following commands:
 uv run pytest
 ```
 
+## Usage
+
+You can find instructions on how to use this software [here](Usage.md).
+
 ## Issues
 
-Please use the [GitHub issue tracker](https://github.com/jmp1985/dragonET/issues) to submit bugs or request features.
+Please use the [GitHub issue tracker](https://github.com/rosalindfranklininstitute/dragonET/issues) to submit bugs or request features.
 
 ## Contributions
 

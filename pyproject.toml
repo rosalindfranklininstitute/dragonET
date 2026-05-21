@@ -155,6 +155,7 @@ explicit = true
 
 "dragonET.new" = "dragonET.command_line:new"
 "dragonET.align" = "dragonET.command_line:align"
+"dragonET.generate_angles" = "dragonET.command_line:generate_angles"
 "dragonET.project" = "dragonET.command_line:project"
 "dragonET.refine" = "dragonET.command_line:refine"
 "dragonET.reconstruct" = "dragonET.command_line:reconstruct"

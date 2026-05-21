@@ -1,4 +1,5 @@
 from dragonET.command_line._align import *  # noqa
+from dragonET.command_line._generate_angles import *  # noqa
 from dragonET.command_line._contours_extend import *  # noqa
 from dragonET.command_line._contours_pick import *  # noqa
 from dragonET.command_line._contours_refine import *  # noqa
