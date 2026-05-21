@@ -99,7 +99,7 @@ def extract_features(projections, rebin_factor):
     return features
 
 
-def find_matching_features(projections, features, min_samples=4):
+def find_matching_features(features, min_samples=4):
     # Initialise the transformation matrix for each image
     matrix = np.full((len(features), 3, 3), np.eye(3))
 
@@ -312,7 +312,7 @@ def track_first_and_last(projections, data, mask, octave, rebin_factor, min_samp
     features = extract_features(first_and_last_images, rebin_factor)
 
     # Find matching features and compute initial transform between images
-    _, match_list = find_matching_features(first_and_last_images, features, min_samples)
+    _, match_list = find_matching_features(features, min_samples)
 
     # Creat th new data matrix
     data2, mask2, octave2 = construct_data_matrix(features, match_list)
@@ -400,9 +400,7 @@ def track_stack(
     features = extract_features(rebinned_projections, rebin_factor)
 
     # Find matching features and compute initial transform between images
-    matrix, match_list = find_matching_features(
-        rebinned_projections, features, min_samples
-    )
+    matrix, match_list = find_matching_features(features, min_samples)
 
     # Construct data matrix. This is a FxPx2 matrix containing the coordinates
     # of all points on all frames. The mask is a FxP matrix showing whether the
