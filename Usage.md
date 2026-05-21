@@ -53,7 +53,7 @@ dragonET.new -p projections.mrc -a angles.rawtlt
 dragonET.track -p projections.mrc --model_in initial_model.yaml
 
 # 3. Refine the geometry model
-dragonET.refine --contours contours.npz --model_in tracked_model.yaml --fix bc
+dragonET.refine --contours contours.npz --model_in initial_model.yaml --fix bc
 
 # 4. Reconstruct the volume
 dragonET.reconstruct -p projections.mrc -m refined_model.yaml
@@ -138,7 +138,7 @@ Refine the geometric model using the tracked features:
 
 ```bash
 # First refinement pass - refine translations and in-plane rotations
-dragonET.refine --contours contours.npz --model_in tracked_model.yaml --fix bc
+dragonET.refine --contours contours.npz --model_in initial_model.yaml --fix bc
 ```
 
 **Output:** `refined_model.yaml`
@@ -146,6 +146,7 @@ dragonET.refine --contours contours.npz --model_in tracked_model.yaml --fix bc
 **Details:**
 - Uses non-linear least squares optimization to refine the geometric model
 - `--fix bc`: Fixes out-of-plane rotations (b) and tilt angles (c), refining only translations and in-plane rotations
+- It is often better to use the `initial_model.yaml` file than the `tracked_model.yaml` file
 
 For improved accuracy, run a second refinement allowing optimisation of out-of-plane rotations:
 
@@ -257,7 +258,7 @@ Refine the geometric model using manually picked features:
 
 ```bash
 # First refinement pass with manual contours
-dragonET.refine --contours manually_picked_contours.npz --model_in tracked_model.yaml --fix bc --model_out manually_refined_model.yaml
+dragonET.refine --contours manually_picked_contours.npz --model_in initial_model.yaml --fix bc --model_out manually_refined_model.yaml
 ```
 
 **Output:** `manually_refined_model.yaml`
