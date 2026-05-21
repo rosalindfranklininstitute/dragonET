@@ -5,105 +5,11 @@
 #
 # Author: James Parkhurst
 #
-import time
-from argparse import ArgumentParser
-from typing import List
-
 import mrcfile  # type: ignore[import-untyped]
 import numpy as np
 import scipy
 import yaml
 from scipy.spatial.transform import Rotation
-
-__all__ = ["stack_transform"]
-
-
-def get_description():
-    """
-    Get the program description
-
-    """
-    return "Transform the stack"
-
-
-def get_parser(parser: ArgumentParser | None = None) -> ArgumentParser:
-    """
-    Get the stack transform parser
-
-    """
-
-    # Initialise the parser
-    if parser is None:
-        parser = ArgumentParser(description=get_description())
-
-    # Add some command line arguments
-    parser.add_argument(
-        "-i",
-        type=str,
-        default=None,
-        dest="projections_in",
-        required=True,
-        help=(
-            """
-            The filename for the input projection images
-            """
-        ),
-    )
-    parser.add_argument(
-        "-o",
-        type=str,
-        default="transformed.mrc",
-        dest="projections_out",
-        required=False,
-        help=(
-            """
-            The filename for the output projection images
-            """
-        ),
-    )
-    parser.add_argument(
-        "-m",
-        "--model",
-        type=str,
-        default=None,
-        dest="model_in",
-        required=True,
-        help=(
-            """
-            The transform model.
-            """
-        ),
-    )
-
-    return parser
-
-
-def stack_transform_impl(args):
-    """
-    Transform the stack
-
-    """
-
-    # Get the start time
-    start_time = time.time()
-
-    # Do the work
-    _stack_transform(
-        args.projections_in,
-        args.projections_out,
-        args.model_in,
-    )
-
-    # Write some timing stats
-    print("Time taken: %.2f seconds" % (time.time() - start_time))
-
-
-def stack_transform(args: List[str] | None = None):
-    """
-    Transform the stack
-
-    """
-    stack_transform_impl(get_parser().parse_args(args=args))
 
 
 def transform_stack(images, matrix):
@@ -181,7 +87,3 @@ def _stack_transform(
 
     # Write the projections
     write_projections(projections, projections_out)
-
-
-if __name__ == "__main__":
-    stack_transform()

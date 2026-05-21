@@ -5,101 +5,8 @@
 #
 # Author: James Parkhurst
 #
-import time
-from argparse import ArgumentParser
-from typing import List
-
 import mrcfile  # type: ignore[import-untyped]
 import numpy as np
-
-__all__ = ["volume_rebin"]
-
-
-def get_description():
-    """
-    Get the program description
-
-    """
-    return "Rebin the volume"
-
-
-def get_parser(parser: ArgumentParser | None = None) -> ArgumentParser:
-    """
-    Get the volume rebin parser
-
-    """
-
-    # Initialise the parser
-    if parser is None:
-        parser = ArgumentParser(description=get_description())
-
-    # Add some command line arguments
-    parser.add_argument(
-        "-i",
-        type=str,
-        default=None,
-        dest="volume_in",
-        required=True,
-        help=(
-            """
-            The filename for the input projection images
-            """
-        ),
-    )
-    parser.add_argument(
-        "-o",
-        type=str,
-        default="rebinned.mrc",
-        dest="volume_out",
-        required=False,
-        help=(
-            """
-            The filename for the output projection images
-            """
-        ),
-    )
-    parser.add_argument(
-        "-f",
-        "--factor",
-        type=float,
-        default=1,
-        dest="factor",
-        help=(
-            """
-            The rebin factor (must be a power of 2).
-            """
-        ),
-    )
-
-    return parser
-
-
-def volume_rebin_impl(args):
-    """
-    Rebin the volume
-
-    """
-
-    # Get the start time
-    start_time = time.time()
-
-    # Do the work
-    _volume_rebin(
-        args.volume_in,
-        args.volume_out,
-        args.factor,
-    )
-
-    # Write some timing stats
-    print("Time taken: %.2f seconds" % (time.time() - start_time))
-
-
-def volume_rebin(args: List[str] | None = None):
-    """
-    Rebin the volume
-
-    """
-    volume_rebin_impl(get_parser().parse_args(args=args))
 
 
 def downsample_volume(data: np.ndarray, factor: int) -> np.ndarray:
@@ -225,7 +132,3 @@ def _volume_rebin(
 
     # Write the volume
     write_volume(volume, volume_out)
-
-
-if __name__ == "__main__":
-    volume_rebin()

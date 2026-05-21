@@ -152,26 +152,7 @@ explicit = true
 # Project command line scripts
 #
 [project.scripts]
-
-"dragonET.new" = "dragonET.command_line:new"
-"dragonET.align" = "dragonET.command_line:align"
-"dragonET.generate_angles" = "dragonET.command_line:generate_angles"
-"dragonET.project" = "dragonET.command_line:project"
-"dragonET.refine" = "dragonET.command_line:refine"
-"dragonET.reconstruct" = "dragonET.command_line:reconstruct"
-"dragonET.track" = "dragonET.command_line:track"
-"dragonET.contours.extend" = "dragonET.command_line:contours_extend"
-"dragonET.contours.pick" = "dragonET.command_line:contours_pick"
-"dragonET.contours.refine" = "dragonET.command_line:contours_refine"
-"dragonET.contours.triangulate" = "dragonET.command_line:contours_triangulate"
-"dragonET.stack.edit" = "dragonET.command_line:stack_edit"
-"dragonET.stack.predict" = "dragonET.command_line:stack_predict"
-"dragonET.stack.rebin" = "dragonET.command_line:stack_rebin"
-"dragonET.stack.rot90" = "dragonET.command_line:stack_rot90"
-"dragonET.stack.transform" = "dragonET.command_line:stack_transform"
-"dragonET.volume.rebin" = "dragonET.command_line:volume_rebin"
-"dragonET.volume.select_sample_axis" = "dragonET.command_line:volume_select_sample_axis"
-"dragonET.make_video" = "dragonET.command_line:make_video"
+"dragonET" = "dragonET.command_line.entrypoint:parse_args"
 
 #
 # Configure setup tools
