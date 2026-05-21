@@ -61,6 +61,33 @@ dragonET reconstruct -p projections.mrc -m refined_model.yaml
 
 This will produce a reconstructed volume in `volume.mrc`.
 
+## Automated Workflow
+
+```bash
+# Run the complete pipeline with a single command
+dragonET run -p projections.mrc -a angles.rawtlt -f 8
+```
+
+This single command performs all the necessary steps:
+- Data import and initial model creation
+- Feature tracking across images
+- Geometric model refinement (two passes)
+- Stack rebinning and alignment
+- Tomographic reconstruction
+- Creates an `output` directory with all results
+
+This will create an `output` directory containing:
+- `initial_model.yaml`: Initial geometric model
+- `tracked_model.yaml` and `tracked_contours.npz`: Results from feature tracking
+- `refined_model_fix_bc.yaml` and `refined_model_fix_c.yaml`: Refined geometric models
+- `volume_fix_bc.mrc` and `volume_fix_c.mrc`: Reconstructed volumes
+- Various aligned stacks for inspection
+- The output will be binned by 8 to enable faster output. Set this to 1 or omit for highest resolution.
+
+If you don't have an angles.rawtlt file, you can also omit this argument and
+the angles will be calculated for you. by inferring from the projections by
+reading the projections header, if available, or by assuming a ±90 tilt range
+
 ## Typical Workflow
 
 The typical workflow for pillar reconstruction with dragonET follows these steps:
@@ -380,6 +407,30 @@ All dragonET command line programs follow a similar naming convention and can be
 ## Main Workflow Programs
 
 These are the core programs used in the typical reconstruction workflow:
+
+### dragonET run
+
+**Description:** Run the complete automated pipeline from data import to reconstruction
+
+**Usage:**
+```bash
+dragonET run -p PROJECTIONS [-a ANGLES] [-r GLOBAL_ROTATION] [-f REBIN_FACTOR] [--device DEVICE]
+```
+
+**Arguments:**
+- `-p, --projections`: The projection images (required)
+- `-a, --angles`: The angles in the rawtlt file (optional, will be generated if not provided)
+- `-r, --global_rotation`: The global in plane rotation (degrees) (default: 0)
+- `-f, --rebin-factor`: The rebin factor (must be a power of 2) (default: 1)
+- `--device`: The device settings to use (choices: "gpu", "gpu_and_host", "host") (default: "gpu")
+
+**Details:**
+- Automates the complete workflow: data import, feature tracking, model refinement, and reconstruction
+- Creates an `output` directory with all intermediate and final results
+- Generates angles if not provided using `dragonET generate_angles`
+- Performs two refinement passes (fix=bc and fix=c)
+- Creates aligned stacks and volumes for both refinement levels
+- Useful for quick processing and testing of new datasets
 
 ### dragonET new
 
