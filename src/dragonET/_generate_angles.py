@@ -37,7 +37,10 @@ def _generate_angles(
     # that the angular range is 180 degrees.
     if projections_file.header.exttyp in [b"FEI1", b"FEI2"]:
         assert len(projections_file.indexed_extended_header.shape) == 1
-        assert projections_file.indexed_extended_header.shape[0] == projections_file.data.shape[0]
+        assert (
+            projections_file.indexed_extended_header.shape[0]
+            == projections_file.data.shape[0]
+        )
         extended_header = projections_file.indexed_extended_header
         angles = extended_header["Alpha tilt"]
     else:
