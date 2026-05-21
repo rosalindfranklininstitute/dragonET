@@ -9,8 +9,8 @@ import time
 from argparse import ArgumentParser
 from typing import List
 
-import astra
-import mrcfile
+import astra  # type: ignore
+import mrcfile  # type: ignore[import-untyped]
 import numpy as np
 import yaml
 from scipy.spatial.transform import Rotation
@@ -26,7 +26,7 @@ def get_description() -> str:
     return "Do the projection"
 
 
-def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
+def get_parser(parser: ArgumentParser | None = None) -> ArgumentParser:
     """
     Get the project parser
 
@@ -117,7 +117,7 @@ def project_impl(args):
     print("Time taken: %.2f seconds" % (time.time() - start_time))
 
 
-def project(args: List[str] = None):
+def project(args: List[str] | None = None):
     """
     Reconstruct the volume
 

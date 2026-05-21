@@ -9,8 +9,8 @@ import time
 from argparse import ArgumentParser
 from typing import List
 
-import astra
-import mrcfile
+import astra  # type: ignore
+import mrcfile  # type: ignore[import-untyped]
 import numpy as np
 import yaml
 from scipy.spatial.transform import Rotation
@@ -26,7 +26,7 @@ def get_description() -> str:
     return "Do the reconstruction"
 
 
-def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
+def get_parser(parser: ArgumentParser | None = None) -> ArgumentParser:
     """
     Get the reconstruct parser
 
@@ -147,7 +147,7 @@ def reconstruct_impl(args):
     print("Time taken: %.2f seconds" % (time.time() - start_time))
 
 
-def reconstruct(args: List[str] = None):
+def reconstruct(args: List[str] | None = None):
     """
     Reconstruct the volume
 
@@ -360,8 +360,8 @@ def _reconstruct(
     projections_filename: str,
     model_filename: str,
     volume_filename: str,
-    initial_volume_filename: str = None,
-    volume_shape: tuple = None,
+    initial_volume_filename: str | None = None,
+    volume_shape: tuple | None = None,
     pixel_size: float = 1,
     num_iterations: int = 1,
     device: str = "gpu",

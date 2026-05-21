@@ -9,7 +9,7 @@ import time
 from argparse import ArgumentParser
 from typing import List
 
-import mrcfile
+import mrcfile  # type: ignore[import-untyped]
 import numpy as np
 import scipy.optimize
 import torch
@@ -26,7 +26,7 @@ def get_description():
     return "Do a rough alignment of the projection images"
 
 
-def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
+def get_parser(parser: ArgumentParser | None = None) -> ArgumentParser:
     """
     Get the align parser
 
@@ -137,7 +137,7 @@ def align_impl(args):
     print("Time taken: %.2f seconds" % (time.time() - start_time))
 
 
-def align(args: List[str] = None):
+def align(args: List[str] | None = None):
     """
     Do a rough alignment of the projection images
 
@@ -200,8 +200,8 @@ def align_single(X: torch.Tensor, Y: torch.Tensor) -> tuple:
     R = torch.sqrt(torch.einsum("ikl,ij,jkl->kl", c, Rxx_inv, c))
 
     # Find the maximum
-    shift = np.unravel_index(torch.argmax(R).cpu(), R.shape)
-    shift -= np.array(R.shape) // 2
+    shift = np.asarray(np.unravel_index(torch.argmax(R).cpu(), R.shape))
+    shift -= np.asarray(R.shape) // 2
 
     # Return the shift
     return R, shift
@@ -209,7 +209,7 @@ def align_single(X: torch.Tensor, Y: torch.Tensor) -> tuple:
 
 def select_reference_images(
     data: torch.Tensor, ref_index: int, max_images: int = 10
-) -> torch.Tensor:
+) -> tuple[torch.Tensor, np.ndarray]:
     """
     Select the N closest reference images to fit to
 
@@ -308,19 +308,19 @@ def align_stack(
     assert max_images > 0
 
     # Get the device
-    device = torch.device(
+    torch_device = torch.device(
         "cuda" if (device == "gpu" and torch.cuda.is_available()) else "cpu"
     )
 
     # Print some details
     algorithm = "multiple correlation"
-    print("Running %s alignment using %s" % (algorithm, str(device)))
+    print("Running %s alignment using %s" % (algorithm, str(torch_device)))
 
     # Save the original parameters
     shifts_orig = shifts.copy()
 
     # Initialise the data
-    fft_data = initialise(data, shifts, device)
+    fft_data = initialise(data, shifts, torch_device)
 
     # Generate the index ordering
     order = list(sorted(range(len(angles)), key=lambda x: abs(angles[x])))
@@ -352,7 +352,7 @@ def align_stack(
             ref_index_is_aligned,
             max_images,
         )
-        fft_data_stack = fft_data_stack.to(device)
+        fft_data_stack = fft_data_stack.to(torch_device)
 
         mask = np.ones(fft_data.shape[1:], dtype=bool)
         for ii, index in enumerate(np.where(is_aligned)[0][fft_data_select]):
@@ -363,11 +363,11 @@ def align_stack(
                 prefilter=False,
             )
             mask = mask & mask_i
-        mask = torch.from_numpy(mask).to(device)
+        torch_mask = torch.from_numpy(mask).to(torch_device)
 
         for index in range(fft_data_stack.shape[0]):
             fft_data_stack[index] = torch.fft.fft2(
-                torch.fft.ifft2(fft_data_stack[index]) * mask
+                torch.fft.ifft2(fft_data_stack[index]) * torch_mask
             )
 
         # Select the reference images and apply real space weights
@@ -378,7 +378,7 @@ def align_stack(
             # Apply the real space weights to the target data
             # Align the image with the stack
             I, shift = align_single(  # noqa: E741
-                fft_data_stack, apply_weights(fft_data[tar_index].to(device))
+                fft_data_stack, apply_weights(fft_data[tar_index].to(torch_device))
             )
 
             # Enforce a maximum shift
@@ -398,7 +398,7 @@ def align_stack(
 
             # Transform the image for the next iteration
             fft_data[tar_index] = fourier_shift_image(
-                fft_data[tar_index].to(device), shift
+                fft_data[tar_index].to(torch_device), shift
             ).to(fft_data.device)
 
             # If we move less than the pixel size then break
@@ -425,7 +425,7 @@ def _align(
     projections_in: str,
     model_in: str,
     model_out: str,
-    reference_image: int = None,
+    reference_image: int | None = None,
     max_shift: float = 0.25,
     max_iter: int = 10,
     max_images: int = 3,

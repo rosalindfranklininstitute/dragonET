@@ -206,4 +206,9 @@ dev = [
     "pytest>=9.0.2",
     "pytest-cov>=7.0.0",
     "ruff>=0.15.13",
+    "scipy-stubs>=1.15.3.0",
+    "types-pyyaml>=6.0.12.20260518",
 ]
+
+[mypy]
+ignore_missing_imports = true

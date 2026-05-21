@@ -9,7 +9,7 @@ import time
 from argparse import ArgumentParser
 from typing import List
 
-import mrcfile
+import mrcfile  # type: ignore[import-untyped]
 import numpy as np
 import scipy.ndimage
 import scipy.signal
@@ -32,7 +32,7 @@ def get_description():
     return "Refine the contours to match features better across images"
 
 
-def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
+def get_parser(parser: ArgumentParser | None = None) -> ArgumentParser:
     """
     Get the contours_refine parser
 
@@ -141,7 +141,7 @@ def contours_refine_impl(args):
     print("Time taken: %.2f seconds" % (time.time() - start_time))
 
 
-def contours_refine(args: List[str] = None):
+def contours_refine(args: List[str] | None = None):
     """
     Extend the contours
 

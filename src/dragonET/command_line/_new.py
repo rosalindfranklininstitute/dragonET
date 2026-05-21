@@ -9,7 +9,7 @@ import time
 from argparse import ArgumentParser
 from typing import List
 
-import mrcfile
+import mrcfile  # type: ignore[import-untyped]
 import numpy as np
 import yaml
 
@@ -24,7 +24,7 @@ def get_description():
     return "Import experimental description"
 
 
-def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
+def get_parser(parser: ArgumentParser | None = None) -> ArgumentParser:
     """
     Get the new parser
 
@@ -105,7 +105,7 @@ def new_impl(args):
     print("Time taken: %.2f seconds" % (time.time() - start_time))
 
 
-def new(args: List[str] = None):
+def new(args: List[str] | None = None):
     """
     Import the experimental description
 

@@ -9,7 +9,7 @@ import time
 from argparse import ArgumentParser
 from typing import List
 
-import mrcfile
+import mrcfile  # type: ignore[import-untyped]
 import numpy as np
 import imageio
 
@@ -240,7 +240,11 @@ def _make_video(
 
     try:
         writer = imageio.get_writer(
-            movie_filename, format="FFMPEG", mode="I", fps=fps, codec="libx264"
+            movie_filename,
+            format="FFMPEG",  # type: ignore
+            mode="I",
+            fps=fps,
+            codec="libx264",
         )
         for image in data:
             image = image * s1 + s0

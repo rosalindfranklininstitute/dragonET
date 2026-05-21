@@ -9,7 +9,7 @@ import time
 from argparse import ArgumentParser
 from typing import List
 
-import mrcfile
+import mrcfile  # type: ignore[import-untyped]
 import numpy as np
 
 __all__ = ["stack_rebin"]
@@ -23,7 +23,7 @@ def get_description():
     return "Rebin the stack"
 
 
-def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
+def get_parser(parser: ArgumentParser | None = None) -> ArgumentParser:
     """
     Get the stack rebin parser
 
@@ -94,7 +94,7 @@ def stack_rebin_impl(args):
     print("Time taken: %.2f seconds" % (time.time() - start_time))
 
 
-def stack_rebin(args: List[str] = None):
+def stack_rebin(args: List[str] | None = None):
     """
     Rebin the stack
 

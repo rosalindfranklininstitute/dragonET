@@ -9,14 +9,14 @@ import time
 from argparse import ArgumentParser
 from typing import List
 
-import mrcfile
+import mrcfile  # type: ignore[import-untyped]
 import numpy as np
 import scipy.ndimage
 import yaml
 
 from scipy.spatial.transform import Rotation
 
-import dragonET
+import dragonET.command_line
 
 __all__ = ["contours_extend"]
 
@@ -29,7 +29,7 @@ def get_description():
     return "Refine a model to align the projection images"
 
 
-def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
+def get_parser(parser: ArgumentParser | None = None) -> ArgumentParser:
     """
     Get the contours_extend parser
 
@@ -126,7 +126,7 @@ def contours_extend_impl(args):
     print("Time taken: %.2f seconds" % (time.time() - start_time))
 
 
-def contours_extend(args: List[str] = None):
+def contours_extend(args: List[str] | None = None):
     """
     Extend the contours
 

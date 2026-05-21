@@ -9,10 +9,8 @@ import time
 from argparse import ArgumentParser
 from typing import List
 
-import mrcfile
+import mrcfile  # type: ignore[import-untyped]
 import numpy as np
-import yaml
-import sys
 
 
 __all__ = ["generate_angles"]
@@ -26,7 +24,7 @@ def get_description():
     return "Generate an angles.rawtlt file."
 
 
-def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
+def get_parser(parser: ArgumentParser | None = None) -> ArgumentParser:
     """
     Get the generate_angles parser
 
@@ -84,7 +82,7 @@ def generate_angles_impl(args):
     print("Time taken: %.2f seconds" % (time.time() - start_time))
 
 
-def generate_angles(args: List[str] = None):
+def generate_angles(args: List[str] | None = None):
     """
     Generate an angles.rawtlt file.
 

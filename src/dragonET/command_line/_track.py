@@ -10,7 +10,7 @@ from argparse import ArgumentParser
 from collections import defaultdict
 from typing import List
 
-import mrcfile
+import mrcfile  # type: ignore[import-untyped]
 import numpy as np
 import yaml
 
@@ -30,7 +30,7 @@ def get_description():
     return "Do a rough alignment of the projection images"
 
 
-def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
+def get_parser(parser: ArgumentParser | None = None) -> ArgumentParser:
     """
     Get the track parser
 
@@ -112,7 +112,7 @@ def track_impl(args):
     print("Time taken: %.2f seconds" % (time.time() - start_time))
 
 
-def track(args: List[str] = None):
+def track(args: List[str] | None = None):
     """
     Do a rough alignment of the projection images
 

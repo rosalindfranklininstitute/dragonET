@@ -1,6 +1,6 @@
 from dragonET.command_line._make_video import _make_video
 import numpy as np
-import mrcfile
+import mrcfile  # type: ignore[import-untyped]
 import os.path
 
 
@@ -14,9 +14,7 @@ def test_make_video(tmpdir):
     write_mrc_file()
 
     _make_video(
-        os.path.join(tmpdir, "data.mrc"), 
-        os.path.join(tmpdir, "movie.mp4"), 
-        factor=1
+        os.path.join(tmpdir, "data.mrc"), os.path.join(tmpdir, "movie.mp4"), factor=1
     )
 
     assert os.path.exists(os.path.join(tmpdir, "movie.mp4"))

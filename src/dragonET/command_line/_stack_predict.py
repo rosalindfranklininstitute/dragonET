@@ -9,12 +9,12 @@ import time
 from argparse import ArgumentParser
 from typing import List
 
-import mrcfile
+import mrcfile  # type: ignore[import-untyped]
 import numpy as np
 import yaml
 from scipy.spatial.transform import Rotation
 
-import dragonET
+import dragonET.command_line
 
 __all__ = ["stack_predict"]
 
@@ -27,7 +27,7 @@ def get_description():
     return "Predict the stack images"
 
 
-def get_parser(parser: ArgumentParser = None) -> ArgumentParser:
+def get_parser(parser: ArgumentParser | None = None) -> ArgumentParser:
     """
     Get the stack predict parser
 
@@ -112,7 +112,7 @@ def stack_predict_impl(args):
     print("Time taken: %.2f seconds" % (time.time() - start_time))
 
 
-def stack_predict(args: List[str] = None):
+def stack_predict(args: List[str] | None = None):
     """
     Predict the stack images
 
