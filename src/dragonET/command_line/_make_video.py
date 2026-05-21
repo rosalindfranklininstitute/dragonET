@@ -149,7 +149,7 @@ def rebin_stack(data: np.ndarray, factor: int) -> np.ndarray:
 
     """
 
-    def is_power_of_2(n):
+    def is_power_of_2(n) -> bool:
         return (n & (n - 1) == 0) and n != 0
 
     # Check rebin factor

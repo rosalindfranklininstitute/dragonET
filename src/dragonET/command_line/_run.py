@@ -7,7 +7,7 @@
 #
 import time
 import os
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
 from typing import List
 
 
@@ -23,7 +23,7 @@ from dragonET.command_line._stack_transform import _stack_transform
 __all__ = ["run"]
 
 
-def get_description():
+def get_description() -> str:
     """
     Get the program description
 
@@ -77,14 +77,6 @@ def get_parser(parser: ArgumentParser | None = None) -> ArgumentParser:
     )
     parser.add_argument(
         "-f",
-        "--rebnglobal_rotation",
-        type=float,
-        default=0,
-        dest="global_rotation",
-        help="The global in plane rotation (degrees)",
-    )
-    parser.add_argument(
-        "-f",
         "--rebin-factor",
         type=int,
         default=1,
@@ -95,11 +87,19 @@ def get_parser(parser: ArgumentParser | None = None) -> ArgumentParser:
             """
         ),
     )
+    parser.add_argument(
+        "--device",
+        type=str,
+        choices=["gpu", "gpu_and_host", "host"],
+        default="gpu",
+        dest="device",
+        help="The device settings to use",
+    )
 
     return parser
 
 
-def run_impl(args):
+def run_impl(args: Namespace) -> None:
     """
     Run the automated pipeline
 
@@ -112,7 +112,6 @@ def run_impl(args):
     _run(
         args.projections,
         args.angles,
-        args.model,
         args.global_rotation,
         args.rebin_factor,
         args.device,
@@ -122,7 +121,7 @@ def run_impl(args):
     print("Time taken: %.2f seconds" % (time.time() - start_time))
 
 
-def run(args: List[str] | None = None):
+def run(args: List[str] | None = None) -> None:
     """
     Run the automated pipeline
 
@@ -136,11 +135,18 @@ def _run(
     global_rotation: float = 0,
     rebin_factor: int = 1,
     device: str = "gpu",
-):
+) -> None:
     """
     Run the automated pipeline
 
     """
+
+    def is_power_of_2(n: int) -> bool:
+        return (n & (n - 1) == 0) and n != 0
+
+    # Check rebin factor
+    assert is_power_of_2(rebin_factor)
+
     # Set up some filenames
     initial_model_filename = os.path.join("output", "initial_model.yaml")
     tracked_model_filename = os.path.join("output", "tracked_model.yaml")
