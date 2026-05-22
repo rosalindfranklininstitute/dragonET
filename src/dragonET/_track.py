@@ -72,7 +72,6 @@ def _detect_and_extract(projection, descriptor_extractor, image_size, i, counter
 def extract_features(
     projections: np.ndarray, threads: int
 ) -> list[dict[str, typing.Any]]:
-    # Get the rebin factor octave:
     # Get the image size
     image_size = np.array(projections.shape[1:])
 
