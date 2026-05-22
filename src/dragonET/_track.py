@@ -69,7 +69,9 @@ def _detect_and_extract(projection, descriptor_extractor, image_size, i, counter
     return feature_dict
 
 
-def extract_features(projections, rebin_factor, threads) -> list[dict[str, typing.Any]]:
+def extract_features(
+    projections: np.ndarray, threads: int
+) -> list[dict[str, typing.Any]]:
     # Get the rebin factor octave:
     # Get the image size
     image_size = np.array(projections.shape[1:])
@@ -298,7 +300,7 @@ def track_first_and_last(projections, data, mask, octave, rebin_factor, min_samp
     first_and_last_images[1] = np.flip(projections[-1], axis=1)
 
     # Extract the image features
-    features = extract_features(first_and_last_images, rebin_factor, threads=1)
+    features = extract_features(first_and_last_images, threads=1)
 
     # Find matching features and compute initial transform between images
     _, match_list = find_matching_features(features, min_samples)
@@ -387,7 +389,7 @@ def track_stack(
     P = P[angle_ordered_indexes, ...]
 
     # Extract the image features
-    features = extract_features(rebinned_projections, rebin_factor, threads=threads)
+    features = extract_features(rebinned_projections, threads=threads)
 
     # Find matching features and compute initial transform between images
     matrix, match_list = find_matching_features(features, min_samples)
