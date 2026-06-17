@@ -5,18 +5,29 @@
 #
 # Author: James Parkhurst
 #
+from __future__ import annotations
 import os
+import typing
+from numpy._typing._array_like import NDArray
+import yaml
+
 import numpy as np
 import scipy.optimize
-import yaml
 import matplotlib
 import matplotlib.pyplot as plt
 from scipy.spatial.transform import Rotation
 
 matplotlib.use("Agg")
 
+if typing.TYPE_CHECKING:
+    from os import PathLike
 
-def residuals(parameters, active, W, M, smoothness):
+    from numpy.typing import NDArray
+
+
+def residuals(
+    parameters, active: NDArray[np.bool_], W, M, smoothness: float
+) -> NDArray[np.float64]:
     """
     The refinement residuals
 
@@ -71,7 +82,7 @@ def residuals(parameters, active, W, M, smoothness):
     return r
 
 
-def penalties(parameters, active, W, M, smoothness):
+def penalties(parameters, active: NDArray[np.bool_], W, M, smoothness: float):
     """
     Penalty functions
 
@@ -120,7 +131,7 @@ def d_dt(dx, dy, a, b, c, W, M):
     for j in range(num_points):
         # Get the mask, observations, rotation matrices
         Mj = M[:, j]
-        Nj = np.count_nonzero(Mj)
+        Nj = int(np.count_nonzero(Mj))
         W[Mj, j]
         Rj = R[Mj, :]
         Qj = np.linalg.inv(Rj.T @ Rj) @ Rj.T
@@ -287,7 +298,7 @@ def d_dc(dx, dy, a, b, c, W, M):
     return d_dp(Rabc, dRabc_dc, W, M)
 
 
-def jacobian(parameters, active, W, M, smoothness):
+def jacobian(parameters, active: NDArray[np.bool_], W, M, smoothness: float):
     """
     The Jacobian
 
@@ -332,7 +343,7 @@ def jacobian(parameters, active, W, M, smoothness):
     return J[:, active.flatten()]
 
 
-def jacobian_penalties(parameters, active, W, M, smoothness):
+def jacobian_penalties(parameters, active: NDArray[np.bool_], W, M, smoothness: float):
     """
     The Jacobian of the penalty functions
 
@@ -346,7 +357,7 @@ def jacobian_penalties(parameters, active, W, M, smoothness):
     b1 = c0 = b0 + b.shape[0]
     c1 = c0 + c.shape[0]
 
-    refine = "a"
+    refine: str = "a"
     if np.count_nonzero(active[3, :]) > 0:
         refine += "b"
     if np.count_nonzero(active[4, :]) > 0:
@@ -365,38 +376,22 @@ def jacobian_penalties(parameters, active, W, M, smoothness):
     db_db = np.identity(b.shape[0])
     dc_dc = np.identity(c.shape[0])
 
-    def dfa_dp():
-        J = np.zeros((da_da.shape[0] - 2, num_params))
-        J[:, a0:a1] = da_da[:-2, :] - 2 * da_da[1:-1, :] + da_da[2:, :]
-        return J
-
-    def dfb_dp():
-        J = np.zeros((db_db.shape[0] - 2, num_params))
-        J[:, b0:b1] = db_db[:-2, :] - 2 * db_db[1:-1, :] + db_db[2:, :]
-        return J
-
-    def dfc_dp():
-        J = np.zeros((dc_dc.shape[0] - 2, num_params))
-        J[:, c0:c1] = dc_dc[:-2, :] - 2 * dc_dc[1:-1, :] + dc_dc[2:, :]
+    def df_dp(d_d: NDArray[np.float64], i: tuple[int, int]) -> NDArray[np.float64]:
+        J = np.zeros((d_d.shape[0] - 2, num_params))
+        J[:, i[0] : i[1]] = d_d[:-2, :] - 2 * d_d[1:-1, :] + d_d[2:, :]
         return J
 
     # Add the regularisations:
     # For a to vary smoothly
     # For b to vary smoothly and be close to zero
     # For c to vary smoothly
-    def not_none(x):
-        return [xx for xx in x if xx is not None]
+    dfs = [np.degrees(df_dp(da_da, i=(a0, a1)))]
+    if "b" in refine:
+        dfs.append(np.degrees(df_dp(db_db, i=(b0, b1))))
+    if "c" in refine:
+        dfs.append(np.degrees(df_dp(dc_dc, i=(c0, c1))))
 
-    J = smoothness * np.concatenate(
-        not_none(
-            [
-                np.degrees(dfa_dp()) if "a" in refine else None,
-                np.degrees(dfb_dp()) if "b" in refine else None,
-                np.degrees(dfc_dp()) if "c" in refine else None,
-            ]
-        ),
-        axis=0,
-    )
+    J = smoothness * np.concatenate(dfs, axis=0)
 
     # Return only active parameters
     return J[:, active.flatten()]
@@ -409,10 +404,10 @@ def refine_model(
     b,
     c,
     data,
-    mask,
-    active=None,
-    max_iter=100,
-    smoothness=10,
+    mask: NDArray[np.bool_],
+    active: NDArray[np.bool_] | str | None = None,
+    max_iter: int = 100,
+    smoothness: float = 10,
 ) -> tuple:
     """
     Estimate the parameters using least squares
@@ -423,7 +418,17 @@ def refine_model(
     else:
         print("Refining model with %d parameters" % np.count_nonzero(active))
 
-    def get_params_and_args(dx, dy, a, b, c, W, M, active=None, smoothness=10):
+    def get_params_and_args(
+        dx,
+        dy,
+        a,
+        b,
+        c,
+        W,
+        M,
+        active: NDArray[np.bool_] | str | None = None,
+        smoothness: float = 10,
+    ):
         # Get the parameters and the active matrix
         parameters = np.stack([dx, dy, a, b, c])
 
@@ -449,11 +454,11 @@ def refine_model(
         # Return the parameters
         return parameters[active].flatten(), (parameters, active, W, M, smoothness)
 
-    def parse_params_and_args(x, parameters, active, W, M, smoothness):
+    def parse_params_and_args(x, parameters, active, W, M, smoothness: float):
         parameters[active] = x
         return parameters, active, W, M, smoothness
 
-    def parse_results(x, parameters, active, W, M, smoothness):
+    def parse_results(x, parameters, active, W, M, smoothness: float) -> tuple:
         parameters[active] = x
         return tuple(parameters)
 
@@ -486,12 +491,12 @@ def refine_model(
     #         bounds_max = np.concatenate([dx_max, dy_max, a_max])
     #     return bounds_min, bounds_max
 
-    def fun(x, *args):
+    def fun(x, *args) -> NDArray[np.float64]:
         args = parse_params_and_args(x, *args)
         # return np.concatenate([residuals(*args)])  # , penalties(*args)])
         return np.concatenate([residuals(*args), penalties(*args)])
 
-    def jac(x, *args):
+    def jac(x, *args) -> NDArray[np.float64]:
         args = parse_params_and_args(x, *args)
         return np.concatenate([jacobian(*args), jacobian_penalties(*args)], axis=0)
 
@@ -543,26 +548,28 @@ def _refine(
     smoothness: float = 10,
     reference_image: int | None = None,
     verbose: bool = False,
-):
+) -> None:
     """
     Do the refinement
 
     """
 
-    def read_points(filename) -> tuple:
+    def read_points(filename: str | PathLike[str]) -> tuple:
         print("Reading points from %s" % filename)
         handle = np.load(filename)
         return handle["data"], handle["mask"]
 
-    def read_model(filename) -> dict:
+    def read_model(filename: str | PathLike[str]) -> dict:
         print("Reading model from %s" % filename)
         return yaml.safe_load(open(filename, "r"))
 
-    def write_model(model, filename):
+    def write_model(model, filename: str | PathLike[str]) -> None:
         print("Writing model to %s" % filename)
         yaml.safe_dump(model, open(filename, "w"), default_flow_style=None)
 
-    def write_angles_vs_image_number(P, directory):
+    def write_angles_vs_image_number(
+        P: NDArray[typing.Any], directory: str | PathLike[str]
+    ) -> None:
         width = 0.0393701 * 190
         height = (6 / 8) * width
         fig, ax = plt.subplots(
@@ -577,7 +584,9 @@ def _refine(
         ax.legend()
         fig.savefig(os.path.join(directory, "angles_vs_image_number.png"), dpi=600)
 
-    def write_shift_vs_image_number(P, directory):
+    def write_shift_vs_image_number(
+        P: NDArray[typing.Any], directory: str | PathLike[str]
+    ) -> None:
         width = 0.0393701 * 190
         height = (6 / 8) * width
         fig, ax = plt.subplots(
@@ -591,7 +600,9 @@ def _refine(
         ax.legend()
         fig.savefig(os.path.join(directory, "shift_vs_image_number.png"), dpi=600)
 
-    def write_xy_shift_distribution(P, directory):
+    def write_xy_shift_distribution(
+        P: NDArray[typing.Any], directory: str | PathLike[str]
+    ) -> None:
         width = 0.0393701 * 190
         height = (6 / 8) * width
         fig, ax = plt.subplots(
@@ -608,7 +619,7 @@ def _refine(
         fig.suptitle("Distribution of X and Y shifts")
         fig.savefig(os.path.join(directory, "xy_shift_histogram.png"), dpi=600)
 
-    def write_plots(P, directory):
+    def write_plots(P: NDArray[typing.Any], directory: str | PathLike[str]) -> None:
         print("Writing plots to %s" % directory)
         if not os.path.exists(directory):
             os.makedirs(directory)
@@ -616,28 +627,28 @@ def _refine(
         write_shift_vs_image_number(P, directory)
         write_xy_shift_distribution(P, directory)
 
-    def write_info(info, filename):
+    def write_info(info, filename: str | PathLike[str]) -> None:
         print("Writing info to %s" % filename)
         yaml.safe_dump(info, open(filename, "w"), default_flow_style=None)
 
-    def get_cycles(fix):
-        # Convert to None
-        if fix == "none":
-            fix = None
+    def get_cycles(fix: str | None) -> list[str] | list[str | None]:
+        # Convert None to key "none"
+        if fix is None:
+            fix = "none"
 
         # Check input
-        assert fix in ["bc", "c", None]
+        assert fix in ["bc", "c", "none"]
 
         # Refine with translation and yaw
         # Then refine with translation, yaw and pitch
         # Then refine with translation, yaw, pitch and roll
         return {
-            None: ["bc", "c", None],
+            "none": ["bc", "c", None],
             "c": ["bc", "c"],
             "bc": ["bc"],
         }[fix]
 
-    def check_obs_per_image(mask):
+    def check_obs_per_image(mask: NDArray[np.bool_]) -> None:
         # Check that each image has atleast 4 observations
         obs_per_image = np.count_nonzero(mask, axis=1)
         if np.any(obs_per_image < 3):
@@ -646,7 +657,7 @@ def _refine(
                 % ("\n".join(map(str, np.where(obs_per_image < 4)[0])))
             )
 
-    def check_obs_per_point(mask):
+    def check_obs_per_point(mask: NDArray[np.bool_]) -> None:
         # Check that each point has at least 3 observations
         obs_per_point = np.count_nonzero(mask, axis=0)
         if np.any(obs_per_point < 2):
@@ -655,7 +666,7 @@ def _refine(
                 % ("\n".join(map(str, np.where(obs_per_point < 2)[0])))
             )
 
-    def check_connections(mask):
+    def check_connections(mask: NDArray[np.bool_]) -> None:
         # Create lookup tables to check each point and each image is touched
         r, n = scipy.ndimage.label(mask)
         if n != 1:

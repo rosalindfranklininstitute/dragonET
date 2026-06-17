@@ -5,12 +5,20 @@
 #
 # Author: James Parkhurst
 #
+from __future__ import annotations
+import imageio
+import typing
+
 import mrcfile  # type: ignore[import-untyped]
 import numpy as np
-import imageio
+
+if typing.TYPE_CHECKING:
+    from os import PathLike
+
+    from numpy.typing import NDArray
 
 
-def rebin_stack(data: np.ndarray, factor: int) -> np.ndarray:
+def rebin_stack(data: np.ndarray, factor: int) -> NDArray[np.float32]:
     """
     Rebin the image stack
 
@@ -20,7 +28,8 @@ def rebin_stack(data: np.ndarray, factor: int) -> np.ndarray:
         return (n & (n - 1) == 0) and n != 0
 
     # Check rebin factor
-    assert is_power_of_2(factor)
+    if not is_power_of_2(factor):
+        raise ValueError("Argument 'factor' must be a factor of 2")
 
     # If factor is > 1 then rebin
     if factor > 1:
@@ -43,17 +52,18 @@ def rebin_stack(data: np.ndarray, factor: int) -> np.ndarray:
     return data
 
 
-def sum_stack(data: np.ndarray, factor: int) -> np.ndarray:
+def sum_stack(data: NDArray[typing.Any], factor: int) -> NDArray[np.float32]:
     """
     Sum the stack.
 
     """
 
-    def is_power_of_2(n):
+    def is_power_of_2(n) -> bool:
         return (n & (n - 1) == 0) and n != 0
 
-    # Check rebin factor
-    assert is_power_of_2(factor)
+    # Check sum factor
+    if not is_power_of_2(factor):
+        raise ValueError("Argument 'factor' must be a factor of 2")
 
     # If factor is > 1 then rebin
     if factor > 1:
@@ -69,8 +79,8 @@ def sum_stack(data: np.ndarray, factor: int) -> np.ndarray:
 
 
 def _make_video(
-    mrc_filename: str,
-    movie_filename: str,
+    mrc_filename: str | PathLike[str],
+    movie_filename: str | PathLike[str],
     factor: int,
     swapaxis: bool = False,
     fps: float = 10,
@@ -83,7 +93,9 @@ def _make_video(
 
     """
     h = mrcfile.mmap(mrc_filename)
-    data = h.data
+    if h.data is None:
+        raise ValueError(f"No data in {mrc_filename}")
+    data = np.asarray(h.data)
 
     if swapaxis:
         print("Swapping axes")
@@ -107,7 +119,7 @@ def _make_video(
 
     try:
         writer = imageio.get_writer(
-            movie_filename,
+            str(movie_filename),
             format="FFMPEG",  # type: ignore
             mode="I",
             fps=fps,

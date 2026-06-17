@@ -5,12 +5,22 @@
 #
 # Author: James Parkhurst
 #
+from __future__ import annotations
+import typing
+import yaml
+
 import mrcfile  # type: ignore[import-untyped]
 import numpy as np
-import yaml
 from scipy.spatial.transform import Rotation
 
 import dragonET._reconstruct
+
+if typing.TYPE_CHECKING:
+    from os import PathLike
+
+    from numpy.typing import NDArray
+
+    _ArrayT = typing.TypeVar("_ArrayT", np.integer, np.floating)
 
 
 def get_matrix_from_parameters(P):
@@ -93,7 +103,9 @@ def predict_image(data: np.ndarray, P_data: np.ndarray, P_image: np.ndarray):
     return np.sum(volume, axis=1)
 
 
-def predict_stack(data: np.ndarray, P: np.ndarray, subset_size: int) -> np.ndarray:
+def predict_stack(
+    data: NDArray[_ArrayT], P: NDArray[typing.Any], subset_size: int
+) -> NDArray[_ArrayT]:
     """
     Predict the stack images
 
@@ -117,25 +129,30 @@ def predict_stack(data: np.ndarray, P: np.ndarray, subset_size: int) -> np.ndarr
 
 
 def _stack_predict(
-    projections_in: str,
-    projections_out: str,
-    model_in: str,
+    projections_in: str | PathLike[str],
+    projections_out: str | PathLike[str],
+    model_in: str | PathLike[str],
     subset_size: int,
-):
+) -> None:
     """
     Predict the stack images
 
     """
 
-    def read_projections(filename):
+    def read_projections(filename: str | PathLike[str]) -> NDArray[typing.Any]:
         print("Reading projections from %s" % filename)
-        return mrcfile.mmap(filename).data
+        data = mrcfile.mmap(filename).data
+        if data is None:
+            raise ValueError(f"No data in {filename}")
+        return data
 
-    def read_model(filename):
+    def read_model(filename: str | PathLike[str]) -> typing.Any:
         print("Reading model from %s" % filename)
         return yaml.safe_load(open(filename))
 
-    def write_projections(projections, filename):
+    def write_projections(
+        projections: NDArray[typing.Any], filename: str | PathLike[str]
+    ) -> None:
         print("Writing projections to %s" % filename)
         handle = mrcfile.new(filename, overwrite=True)
         handle.set_data(projections)

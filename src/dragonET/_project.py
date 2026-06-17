@@ -5,20 +5,29 @@
 #
 # Author: James Parkhurst
 #
+from __future__ import annotations
+import typing
+import yaml
+
 import astra  # type: ignore[import-untyped]
 import mrcfile  # type: ignore[import-untyped]
 import numpy as np
-import yaml
 from scipy.spatial.transform import Rotation
 
+if typing.TYPE_CHECKING:
+    from os import PathLike
+
+    from numpy.typing import NDArray, ArrayLike
+
+    SupportedDevices = typing.Literal["gpu", "gpu_and_host"]
 
 def _prepare_astra_geometry(
-    P: np.ndarray,
+    P: NDArray[typing.Any],
     pixel_size: float = 1,
     image_size: tuple = (0, 0),
     axis=(0, 0, 1),
     axis_origin=(0, 0, 0),
-) -> np.ndarray:
+) -> NDArray[typing.Any]:
     """
     Prepare the geometry vectors
 
@@ -33,7 +42,9 @@ def _prepare_astra_geometry(
 
     """
 
-    def matrix_to_rotate_a_onto_b(a, b):
+    def matrix_to_rotate_a_onto_b(
+        a: NDArray[np.float64], b: NDArray[np.float64]
+    ) -> NDArray[np.float64]:
         # Compute the unit vectors
         a = a / np.linalg.norm(a)
         b = b / np.linalg.norm(b)
@@ -61,8 +72,10 @@ def _prepare_astra_geometry(
         # Return the rotation matrix
         return U
 
-    def prepare_sample_alignment_rotation_and_translation(axis, axis_origin):
-        U = matrix_to_rotate_a_onto_b(axis, np.array((0, 0, 1)))
+    def prepare_sample_alignment_rotation_and_translation(
+        axis: NDArray[np.float64], axis_origin: NDArray[np.float64]
+    ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+        U = matrix_to_rotate_a_onto_b(axis, np.array((0, 0, 1), dtype=np.float64))
         return U, -axis_origin
 
     print("Preparing geometry with pixel size %f" % pixel_size)
@@ -114,8 +127,8 @@ def _prepare_astra_geometry(
 def _project_with_astra(
     volume: np.ndarray,
     vectors: np.ndarray,
-    shape: tuple,
-    device: str = "gpu",
+    shape: tuple[int, int],
+    device: SupportedDevices = "gpu",
 ) -> np.ndarray:
     """
     Do the projection with astra
@@ -155,11 +168,11 @@ def _project_with_astra(
     # Create the projector object
     if device in ["gpu", "gpu_and_host"]:
         projector_id = astra.create_projector("cuda3d", proj_geom, vol_geom)
-    elif device in ["host"]:
-        raise RuntimeError("Not implemented")
+    else:
+        raise RuntimeError("Device type '%s' is not implemented")
 
     # Do the projection
-    W = astra.OpTomo(projector_id)
+    W = astra.OpTomo(projector_id)  # type: ignore
     W.FP(volume, out=projections)
 
     # Put the projections in sinogram order
@@ -169,7 +182,14 @@ def _project_with_astra(
     return projections
 
 
-def project_internal(volume, P, pixel_size, axis, axis_origin, mode):
+def project_internal(
+    volume: NDArray[typing.Any],
+    P: NDArray[typing.Any],
+    pixel_size: float,
+    axis: NDArray[np.float64],
+    axis_origin: NDArray[np.float64],
+    mode,
+):
     """
     Project the image
 
@@ -185,11 +205,11 @@ def project_internal(volume, P, pixel_size, axis, axis_origin, mode):
 
 
 def _project(
-    volume_filename: str,
-    model_filename: str,
-    projections_filename: str,
+    volume_filename: str | PathLike[str],
+    model_filename: str | PathLike[str],
+    projections_filename: str | PathLike[str],
     pixel_size: float = 1,
-    device: str = "gpu",
+    device: SupportedDevices = "gpu",
 ):
     """
     Do the projection
@@ -203,20 +223,26 @@ def _project(
 
     """
 
-    def read_model(filename):
+    def read_model(filename: str | PathLike[str]) -> typing.Any:
         print("Reading model from %s" % filename)
         return yaml.safe_load(open(filename))
 
-    def read_volume(filename):
+    def read_volume(filename: str | PathLike[str]) -> NDArray[typing.Any]:
         print("Reading volume from %s" % filename)
-        return mrcfile.mmap(filename).data
+        data = mrcfile.mmap(filename).data
+        if data is None:
+            raise ValueError(f"No data in {filename}")
+        return data
 
-    def write_projections(filename, projections):
+    def write_projections(
+        filename: str | PathLike[str], projections: NDArray[typing.Any]
+    ) -> None:
         print("Writing projections to %s" % filename)
         outfile = mrcfile.new(filename, overwrite=True)
         outfile.set_data(projections)
 
-    def normalise(v):
+    def normalise(v: ArrayLike) -> NDArray[np.float64]:
+        v = np.asarray(v, dtype=np.float64)
         return v / np.linalg.norm(v)
 
     # Read the model
@@ -229,8 +255,12 @@ def _project(
     P = np.array(model["transform"], dtype=float)
 
     # Get the vector to align to
-    axis = np.array(normalise(model.get("axis", (1, 0, 0)))[::-1])
-    axis_origin = np.array(model.get("axis_origin", (0, 0, 0))[::-1])
+    axis = np.asarray(
+        normalise(model.get("axis", (1, 0, 0)))[::-1], copy=True, dtype=np.float64
+    )
+    axis_origin = np.asarray(
+        model.get("axis_origin", (0, 0, 0))[::-1], copy=True, dtype=np.float64
+    )
 
     # Do the projection
     projections = project_internal(volume, P, pixel_size, axis, axis_origin, device)

@@ -4,14 +4,20 @@
 # Copyright (C) 2024 Diamond Light Source and Rosalind Franklin Institute
 #
 # Author: James Parkhurst
+from __future__ import annotations
+import typing
+import yaml
+
 import mrcfile  # type: ignore[import-untyped]
 import numpy as np
 import scipy.ndimage
-import yaml
 
 from scipy.spatial.transform import Rotation
 
-import dragonET._contours_triangulate
+from dragonET import _contours_triangulate, _stack_predict
+
+if typing.TYPE_CHECKING:
+    from os import PathLike
 
 
 def compute_derivatives(predicted, image):
@@ -41,7 +47,15 @@ def compute_optical_flow(Ix, Iy, It):
 
 
 def extend_contours_for_image(
-    stack, image, P_stack, P_image, points, data, mask, octave, max_threshold=0.8
+    stack,
+    image,
+    P_stack,
+    P_image,
+    points,
+    data,
+    mask,
+    octave,
+    max_threshold: float = 0.8,
 ):
     """
     Try to extend the contours onto the image
@@ -53,7 +67,7 @@ def extend_contours_for_image(
     mask_image = np.zeros((1, mask.shape[1]))
 
     # Predict the image from the images
-    predicted = dragonET._stack_predict.predict_image(stack, P_stack, P_image)
+    predicted = _stack_predict.predict_image(stack, P_stack, P_image)
 
     # Compute the derivatives
     Ix, Iy, It = compute_derivatives(predicted, image)
@@ -154,7 +168,7 @@ def extend_contours_internal(projections, P, data, mask, octave, subset_size: in
     c = np.radians(P[:, 4])
 
     # Triangulate the 3D points
-    points = dragonET._contours_triangulate.triangulate(dx, dy, a, b, c, data, mask)
+    points = _contours_triangulate.triangulate(dx, dy, a, b, c, data, mask)
 
     # Copy input
     data = data.copy()
@@ -186,12 +200,12 @@ def extend_contours_internal(projections, P, data, mask, octave, subset_size: in
 
 
 def _contours_extend(
-    projections_in: str,
-    model_in: str,
-    contours_in: str,
-    contours_out: str,
+    projections_in: str | PathLike[str],
+    model_in: str | PathLike[str],
+    contours_in: str | PathLike[str],
+    contours_out: str | PathLike[str],
     subset_size: int,
-):
+) -> None:
     """
     Extend the contours
 

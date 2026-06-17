@@ -5,17 +5,27 @@
 #
 # Author: James Parkhurst
 #
+from __future__ import annotations
+import typing
+
 import mrcfile  # type: ignore[import-untyped]
 import numpy as np
 
+if typing.TYPE_CHECKING:
+    from os import PathLike
 
-def rebin_stack(data: np.ndarray, factor: int) -> np.ndarray:
+    from numpy.typing import NDArray
+
+    _ArrayT = typing.TypeVar("_ArrayT", np.floating, np.integer)
+
+
+def rebin_stack(data: NDArray[_ArrayT], factor: int) -> NDArray[_ArrayT | np.float32]:
     """
     Rebin the image stack
 
     """
 
-    def is_power_of_2(n):
+    def is_power_of_2(n: int) -> bool:
         return (n & (n - 1) == 0) and n != 0
 
     # Check rebin factor
@@ -35,13 +45,13 @@ def rebin_stack(data: np.ndarray, factor: int) -> np.ndarray:
             shape[2],
             factor,
         )
-        data = data.reshape(shape).sum(-1).sum(2).astype("float32")
+        data = data.reshape(shape).sum(-1).sum(2).astype(np.float32)
     return data
 
 
 def _stack_rebin(
-    projections_in: str,
-    projections_out: str,
+    projections_in: str | PathLike[str],
+    projections_out: str | PathLike[str],
     factor: int,
 ):
     """
@@ -49,11 +59,16 @@ def _stack_rebin(
 
     """
 
-    def read_projections(filename):
+    def read_projections(filename) -> NDArray[typing.Any]:
         print("Reading projections from %s" % filename)
-        return mrcfile.mmap(filename).data
+        data = mrcfile.mmap(filename).data
+        if data is None:
+            raise ValueError(f"No data in {filename}")
+        return data
 
-    def write_projections(projections, filename):
+    def write_projections(
+        projections: NDArray[typing.Any], filename: str | PathLike[str]
+    ) -> None:
         print("Writing projections to %s" % filename)
         handle = mrcfile.new(filename, overwrite=True)
         handle.set_data(projections)

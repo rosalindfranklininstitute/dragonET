@@ -5,12 +5,19 @@
 #
 # Author: James Parkhurst
 #
+from __future__ import annotations
+import typing
+import yaml
+
 import mrcfile  # type: ignore[import-untyped]
 import numpy as np
 import scipy
 import torch
-import yaml
 
+if typing.TYPE_CHECKING:
+    from os import PathLike
+
+    from numpy.typing import NDArray
 
 def align_single(X: torch.Tensor, Y: torch.Tensor) -> tuple:
     """
@@ -289,23 +296,26 @@ def align_stack(
 
 
 def _align(
-    projections_in: str,
-    model_in: str,
-    model_out: str,
+    projections_in: str | PathLike[str],
+    model_in: str | PathLike[str],
+    model_out: str | PathLike[str],
     reference_image: int | None = None,
     max_shift: float = 0.25,
     max_iter: int = 10,
     max_images: int = 3,
     device: str = "gpu",
-):
+) -> None:
     """
     Do the alignment
 
     """
 
-    def read_projections(filename):
+    def read_projections(filename) -> NDArray[typing.Any]:
         print("Reading projections from %s" % filename)
-        return mrcfile.mmap(filename).data
+        data = mrcfile.mmap(filename).data
+        if data is None:
+            raise ValueError(f"No data in {filename}")
+        return data
 
     def read_model(filename) -> dict:
         print("Reading model from %s" % filename)

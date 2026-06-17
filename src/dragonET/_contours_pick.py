@@ -5,47 +5,49 @@
 #
 # Author: James Parkhurst
 #
+from __future__ import annotations
+import typing
+from numpy._typing._array_like import NDArray
+import yaml
+
 import mrcfile  # type: ignore[import-untyped]
 import numpy as np
-import yaml
 from scipy.spatial.transform import Rotation
 
-import dragonET
+from dragonET import _stack_transform
+
+if typing.TYPE_CHECKING:
+    from os import PathLike
 
 
 def _contours_pick(
-    projections_filename: str,
-    contours_out_filename: str,
-    contours_in_filename: str | None = None,
-    model_in_filename: str | None = None,
-):
+    projections_filename: str | PathLike[str],
+    contours_out_filename: str | PathLike[str],
+    contours_in_filename: str | PathLike[str],
+    model_in_filename: str | PathLike[str],
+) -> None:
     """
     Pick the fiduccials manually
 
     """
     import napari  # type: ignore
 
-    def read_projections(filename):
+    def read_projections(filename: str | PathLike[str]) -> NDArray[typing.Any]:
         print("Reading projections from %s" % filename)
-        return mrcfile.mmap(filename)
+        data = mrcfile.mmap(filename).data
+        if data is None:
+            raise ValueError(f"No data in {filename}")
+        return data
 
-    def read_contours(filename):
-        if filename:
-            print("Reading contours from %s" % filename)
-            return np.load(filename)
-        else:
-            contours = None
-        return contours
+    def read_contours(filename: str | PathLike[str]) -> typing.Any:
+        print("Reading contours from %s" % filename)
+        return np.load(filename)
 
-    def read_model(filename):
-        if filename:
-            print("Reading model from %s" % filename)
-            model = yaml.safe_load(open(filename))
-        else:
-            model = None
-        return model
+    def read_model(filename: str | PathLike[str]) -> typing.Any:
+        print("Reading model from %s" % filename)
+        return yaml.safe_load(open(filename))
 
-    def write_contours(filename, contours):
+    def write_contours(filename: str | PathLike[str], contours) -> None:
         print("Writing contours to %s" % filename)
         np.savez(
             filename,
@@ -54,7 +56,7 @@ def _contours_pick(
             octave=contours["octave"],
         )
 
-    def set_contours(viewer, transform, contours, image_size):
+    def set_contours(viewer, transform, contours, image_size) -> None:
         # Invert the transform
         transform = np.linalg.inv(transform)
 
@@ -117,7 +119,9 @@ def _contours_pick(
         contours["octave"] = np.ones(contours["data"].shape[1])
         return contours
 
-    def get_transform_matrix(P, image_size):
+    def get_transform_matrix(
+        P: NDArray[typing.Any], image_size: NDArray[np.integer]
+    ) -> NDArray[np.float64]:
         # Get the origin translation
         oy, ox = np.array(image_size) / 2
 
@@ -145,10 +149,10 @@ def _contours_pick(
 
     def transform_stack(projections, matrix):
         print("Transforming stack")
-        return dragonET._stack_transform.transform_stack(projections, matrix)
+        return _stack_transform.transform_stack(projections, matrix)
 
     # Load the projections data
-    projections = read_projections(projections_filename).data
+    projections = read_projections(projections_filename)
 
     # Read the contours
     contours = read_contours(contours_in_filename)
@@ -159,7 +163,7 @@ def _contours_pick(
     # Get the transform matrix
     if model is not None:
         transform = get_transform_matrix(
-            np.array(model["transform"]), projections.shape[1:]
+            np.array(model["transform"]), np.asarray(projections.shape[1:])
         )
     else:
         transform = np.full((projections.shape[0], 3, 3), np.eye(3))
