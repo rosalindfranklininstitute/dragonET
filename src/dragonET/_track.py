@@ -13,7 +13,7 @@ import mrcfile  # type: ignore[import-untyped]
 import numpy as np
 import yaml
 
-from multiprocessing import Pool
+from multiprocessing import Pool, Lock
 from scipy.spatial.transform import Rotation
 from skimage.feature import SIFT, match_descriptors  # , plot_matches
 from skimage.measure import ransac
@@ -25,6 +25,9 @@ if typing.TYPE_CHECKING:
     from numpy.typing import NDArray
 
     _ArrayT = typing.TypeVar("_ArrayT", np.integer, np.floating)
+
+
+print_lock = Lock()
 
 
 def rebin_stack(data: NDArray[typing.Any], factor: int) -> NDArray[typing.Any]:
@@ -86,11 +89,13 @@ def _detect_and_extract(
         "orientations": descriptor_extractor.orientations,
     }
 
-    # it's not projection.shape[0]
-    print(
-        "Extracted %d features from image %d / %d"
-        % (len(descriptor_extractor.positions), i + 1, counter)
-    )
+    with print_lock:
+        # it's not projection.shape[0]
+        print(
+            "Extracted %d features from image %d / %d"
+            % (len(descriptor_extractor.positions), i + 1, counter),
+            flush=True,
+        )
 
     return feature_dict
 
@@ -110,6 +115,7 @@ def extract_features(
 
     features = []
 
+    print(f"Starting feature extraction with {threads} processes...")
     # multiprocessing starmap of the detect and extract function for speed
     if threads > 1:
         with Pool(processes=threads) as p:
@@ -365,6 +371,9 @@ def track_first_and_last(
 
     # Find matching features and compute initial transform between images
     _, match_list = find_matching_features(features, min_samples)
+
+    if not match_list:
+        raise ValueError("Failed to find matches between first and last images")
 
     # Creat th new data matrix
     data2, mask2, octave2 = construct_data_matrix(features, match_list)
