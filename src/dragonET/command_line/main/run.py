@@ -82,6 +82,17 @@ def add_arguments(parser: ArgumentParser) -> None:
         dest="device",
         help="The device settings to use",
     )
+    parser.add_argument(
+        "--threads",
+        type=int,
+        default=1,
+        dest="threads",
+        help=(
+            """
+            Number of threads to perform tracking with.
+            """
+        ),
+    )
 
 
 def run(namespace: Namespace) -> None:
@@ -101,6 +112,7 @@ def run(namespace: Namespace) -> None:
         namespace.global_rotation,
         namespace.rebin_factor,
         namespace.device,
+        namespace.threads,
     )
 
     # Write some timing stats
