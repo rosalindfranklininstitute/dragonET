@@ -13,7 +13,7 @@ import mrcfile  # type: ignore[import-untyped]
 import numpy as np
 import yaml
 
-from multiprocessing import Pool
+from multiprocessing import Pool, Lock
 from scipy.spatial.transform import Rotation
 from skimage.feature import SIFT, match_descriptors  # , plot_matches
 from skimage.measure import ransac
@@ -25,6 +25,9 @@ if typing.TYPE_CHECKING:
     from numpy.typing import NDArray
 
     _ArrayT = typing.TypeVar("_ArrayT", np.integer, np.floating)
+
+
+print_lock = Lock()
 
 
 def rebin_stack(data: NDArray[typing.Any], factor: int) -> NDArray[typing.Any]:
@@ -86,11 +89,13 @@ def _detect_and_extract(
         "orientations": descriptor_extractor.orientations,
     }
 
-    # it's not projection.shape[0]
-    print(
-        "Extracted %d features from image %d / %d"
-        % (len(descriptor_extractor.positions), i + 1, counter)
-    )
+    with print_lock:
+        # it's not projection.shape[0]
+        print(
+            "Extracted %d features from image %d / %d"
+            % (len(descriptor_extractor.positions), i + 1, counter),
+            flush=True,
+        )
 
     return feature_dict
 
