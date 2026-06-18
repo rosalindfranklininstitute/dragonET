@@ -372,6 +372,9 @@ def track_first_and_last(
     # Find matching features and compute initial transform between images
     _, match_list = find_matching_features(features, min_samples)
 
+    if not match_list:
+        raise ValueError("Failed to find matches between first and last images")
+
     # Creat th new data matrix
     data2, mask2, octave2 = construct_data_matrix(features, match_list)
 
