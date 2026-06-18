@@ -132,8 +132,7 @@ def extract_features(
 
 
 def find_matching_features(
-    features: list[dict[str, typing.Any]],
-    min_samples: int = 4,
+    features: list[dict[str, typing.Any]], min_samples: int = 4, max_ratio: float = 0.95
 ) -> tuple[NDArray[np.float64], dict[tuple[int, int], tuple[int, int]]]:
     # Initialise the transformation matrix for each image
     matrix = np.full((len(features), 3, 3), np.eye(3), dtype=np.float64)
@@ -147,7 +146,7 @@ def find_matching_features(
         matches = match_descriptors(
             features[i]["descriptors"],
             features[j]["descriptors"],
-            max_ratio=0.95,
+            max_ratio=max_ratio,
             cross_check=True,
         )
 
@@ -345,6 +344,7 @@ def track_first_and_last(
     mask: NDArray[np.bool_],
     octave: NDArray[np.int64],
     min_samples: int,
+    max_ratio: float = 0.95,
 ) -> tuple[NDArray[_ArrayT], NDArray[np.bool_], NDArray[np.int64]]:
     """
     Track features across the first and last images if they are around 180 degrees apart
@@ -472,9 +472,18 @@ def track_stack(
     data, mask, octave = construct_data_matrix(features, match_list)
 
     # Try to track features across the end of the scan
-    if len(P) > 2 and angular_difference_180(P[0, 4], P[-1, 4]) < 10:
+    angular_diff = angular_difference_180(P[0, 4], P[-1, 4])
+    if len(P) > 2 and angular_diff < 10:
+        # Scale max_ratio between 0.95 and 0.8 based on how close together the
+        # first and last projections are.
+        max_ratio = 0.95 + min(angular_diff / 25, 0.15)
         data, mask, octave = track_first_and_last(
-            rebinned_projections, data, mask, octave, min_samples
+            rebinned_projections,
+            data,
+            mask,
+            octave,
+            min_samples,
+            max_ratio=max_ratio,
         )
 
     # Recentre the points around the origin. This calculates the optimal matrix
