@@ -44,6 +44,17 @@ def add_arguments(parser: ArgumentParser) -> None:
         ),
     )
     parser.add_argument(
+        "--threads",
+        type=int,
+        default=1,
+        dest="threads",
+        help=(
+            """
+            Number of threads to perform tracking with.
+            """
+        ),
+    )
+    parser.add_argument(
         "--model_out",
         type=str,
         default="tracked_model.yaml",
@@ -83,6 +94,7 @@ def run(namespace: Namespace) -> None:
         namespace.model_in,
         namespace.model_out,
         namespace.contours_out,
+        namespace.threads,
     )
 
     # Write some timing stats

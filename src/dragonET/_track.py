@@ -12,6 +12,7 @@ import mrcfile  # type: ignore[import-untyped]
 import numpy as np
 import yaml
 
+from multiprocessing import Pool
 from scipy.spatial.transform import Rotation
 from skimage.feature import SIFT, match_descriptors  # , plot_matches
 from skimage.measure import ransac
@@ -48,55 +49,49 @@ def rebin_stack(data: np.ndarray, factor: int) -> np.ndarray:
     return data
 
 
-def extract_features(projections, rebin_factor) -> list[dict[str, typing.Any]]:
-    # Get the rebin factor octave
-    np.log2(rebin_factor).astype(int)
+def _detect_and_extract(projection, descriptor_extractor, image_size, i, counter):  #ndarray, int
+    descriptor_extractor.detect_and_extract(projection)
+    feature_dict = {
+        "keypoints": descriptor_extractor.positions[:, ::-1]
+        / image_size[None, ::-1],
+        "descriptors": descriptor_extractor.descriptors,
+        "octaves": descriptor_extractor.octaves,  # + rebin_factor_octave,
+        "scales": descriptor_extractor.scales,  # + rebin_factor_octave,
+        "orientations": descriptor_extractor.orientations,
+        }
 
+    # it's not projection.shape[0]
+    print(
+        "Extracted %d features from image %d / %d"
+        % (len(descriptor_extractor.positions), i + 1, counter)
+    )
+
+    return feature_dict
+
+
+def extract_features(
+    projections: np.ndarray, threads: int
+) -> list[dict[str, typing.Any]]:
     # Get the image size
     image_size = np.array(projections.shape[1:])
 
-    # Initialise the SIFT algorithm
-    descriptor_extractor = SIFT(
-        upsampling=1,
-        # c_dog=0.0000000001,
-        # c_edge=100000000000,
-        # n_scales=1,
-        # n_octaves=1,
-        # c_dog=0.1,
-        n_scales=32,
-        n_octaves=32,
-        n_hist=32,
-        n_ori=32,
-    )
+    # initialise SIFT parameters, and format starmap inputs
+    sift = SIFT(upsampling=1, n_scales=32, n_octaves=32, n_hist=32, n_ori=32)
+    projection_SIFT_pairs = [(projections[i], sift, image_size, i, projections.shape[0]) for i in range(projections.shape[0])]
 
-    # Initialise the feature lookup
     features = []
 
-    # For each image run the SIFT feature extractor
-    for i in range(projections.shape[0]):
-        # Extract the features
-        descriptor_extractor.detect_and_extract(projections[i])
+    # multiprocessing starmap of the detect and extract function for speed
+    if threads > 1:
+        with Pool(processes=threads) as p:
+            features = p.starmap(_detect_and_extract, projection_SIFT_pairs)
+    else:
+        print("Mate, are you sure you want to run this with a single thread?")
+        for projection, sift, image_size, i, projection_shape in projection_SIFT_pairs:
+            features.append(_detect_and_extract(projection, sift, image_size, i, projection_shape))
 
-        # Add to the feature lookup. Here we save the positions in (x, y) order
-        # rather than the (y, x) order that comes out of the descriptor. This
-        # is because we want to do some matrix calculations and its easier to
-        # keep track of if everything is consistent.
-        features.append(
-            {
-                "keypoints": descriptor_extractor.positions[:, ::-1]
-                / image_size[None, ::-1],
-                "descriptors": descriptor_extractor.descriptors,
-                "octaves": descriptor_extractor.octaves,  # + rebin_factor_octave,
-                "scales": descriptor_extractor.scales,  # + rebin_factor_octave,
-                "orientations": descriptor_extractor.orientations,
-            }
-        )
-
-        print(
-            "Extracted %d features from image %d / %d"
-            % (len(descriptor_extractor.positions), i + 1, projections.shape[0])
-        )
-
+    if not features:
+        raise ValueError("Features vector is empty")
     return features
 
 
@@ -310,7 +305,7 @@ def track_first_and_last(projections, data, mask, octave, rebin_factor, min_samp
     first_and_last_images[1] = np.flip(projections[-1], axis=1)
 
     # Extract the image features
-    features = extract_features(first_and_last_images, rebin_factor)
+    features = extract_features(first_and_last_images, threads=1)
 
     # Find matching features and compute initial transform between images
     _, match_list = find_matching_features(features, min_samples)
@@ -364,6 +359,7 @@ def track_stack(
     P,
     rebin_factor=8,
     min_samples=4,
+    threads=1,
 ):
     """
     Do the alignment
@@ -398,7 +394,7 @@ def track_stack(
     P = P[angle_ordered_indexes, ...]
 
     # Extract the image features
-    features = extract_features(rebinned_projections, rebin_factor)
+    features = extract_features(rebinned_projections, threads=threads)
 
     # Find matching features and compute initial transform between images
     matrix, match_list = find_matching_features(features, min_samples)
@@ -436,6 +432,7 @@ def _track(
     model_in: str,
     model_out: str,
     contours_out: str,
+    threads: int,
 ):
     """
     Do the alignment
@@ -471,7 +468,7 @@ def _track(
     P = np.array(model["transform"], dtype=float)
 
     # Extract some contours
-    data, mask, octave, P = track_stack(projections, P)
+    data, mask, octave, P = track_stack(projections, P, threads=threads)
 
     # Update the model and convert back to degrees
     model["transform"] = P.tolist()
