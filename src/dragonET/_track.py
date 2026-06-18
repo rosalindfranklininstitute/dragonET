@@ -82,7 +82,7 @@ def extract_features(
     features = []
 
     # multiprocessing starmap of the detect and extract function for speed
-    if threads != 1:
+    if threads > 1:
         with Pool(processes=threads) as p:
             features = p.starmap(_detect_and_extract, projection_SIFT_pairs)
     else:
