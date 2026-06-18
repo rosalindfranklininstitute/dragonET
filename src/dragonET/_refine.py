@@ -8,7 +8,6 @@
 from __future__ import annotations
 import os
 import typing
-from numpy._typing._array_like import NDArray
 import yaml
 
 import numpy as np

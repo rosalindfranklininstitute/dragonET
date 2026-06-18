@@ -7,7 +7,6 @@
 #
 from __future__ import annotations
 import typing
-from numpy._typing._array_like import NDArray
 import yaml
 
 import mrcfile  # type: ignore[import-untyped]
@@ -21,6 +20,8 @@ from dragonET import _stack_transform
 
 if typing.TYPE_CHECKING:
     from os import PathLike
+
+    from numpy.typing import NDArray
 
     from napari.viewer import Viewer
 

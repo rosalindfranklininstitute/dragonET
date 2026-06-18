@@ -7,7 +7,6 @@
 #
 from __future__ import annotations
 import typing
-from numpy._typing._array_like import NDArray
 import yaml
 
 import mrcfile  # type: ignore[import-untyped]
