@@ -86,7 +86,7 @@ def extract_features(
         features = p.starmap(_detect_and_extract, projection_SIFT_pairs)
 
     if not features:
-        raise ValueError(f"Features vector is empty")
+        raise ValueError("Features vector is empty")
     return features
 
 
