@@ -44,17 +44,6 @@ def add_arguments(parser: ArgumentParser) -> None:
         ),
     )
     parser.add_argument(
-        "--threads",
-        type=int,
-        default=1,
-        dest="threads",
-        help=(
-            """
-            Number of threads to perform tracking with.
-            """
-        ),
-    )
-    parser.add_argument(
         "--model_out",
         type=str,
         default="tracked_model.yaml",
@@ -73,6 +62,17 @@ def add_arguments(parser: ArgumentParser) -> None:
         help=(
             """
             A binary file describing the contours.
+            """
+        ),
+    )
+    parser.add_argument(
+        "--threads",
+        type=int,
+        default=1,
+        dest="threads",
+        help=(
+            """
+            Number of threads to perform tracking with.
             """
         ),
     )
