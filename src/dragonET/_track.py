@@ -110,6 +110,7 @@ def extract_features(
 
     features = []
 
+    print(f"Starting feature extraction with {threads} processes...")
     # multiprocessing starmap of the detect and extract function for speed
     if threads > 1:
         with Pool(processes=threads) as p:
