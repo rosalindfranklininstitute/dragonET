@@ -85,7 +85,8 @@ def extract_features(
     with Pool(processes=threads) as p:
         features = p.starmap(_detect_and_extract, projection_SIFT_pairs)
 
-    assert features != []
+    if not features:
+        raise ValueError(f"No features found in projection {i + 1} of {projections.shape[0]}")
     return features
 
 
