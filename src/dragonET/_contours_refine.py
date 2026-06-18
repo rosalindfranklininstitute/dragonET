@@ -25,6 +25,8 @@ if typing.TYPE_CHECKING:
 
     from numpy.typing import NDArray
 
+    _ArrayT = typing.TypeVar("_ArrayT", np.integer, np.floating)
+
 
 def _refine_model(
     P: NDArray[typing.Any],
@@ -73,14 +75,18 @@ def _refine_model(
     return P
 
 
-def _predict_image(projections, P, P_image):
-    def _get_matrix_from_parameters(P):
+def _predict_image(
+    projections: NDArray[typing.Any],
+    P: NDArray[typing.Any],
+    P_image: NDArray[typing.Any],
+):
+    def _get_matrix_from_parameters(P: NDArray[typing.Any]) -> NDArray[np.float64]:
         return _stack_predict.get_matrix_from_parameters(P)
 
-    def _get_parameters_from_matrix(R):
+    def _get_parameters_from_matrix(R: NDArray[typing.Any]) -> NDArray[np.float64]:
         return _stack_predict.get_parameters_from_matrix(R)
 
-    def _get_matrix(P, image_size):
+    def _get_matrix(P: NDArray[typing.Any], image_size: NDArray[np.integer]):
         # Get the origin translation
         oy, ox = np.array(image_size) / 2
 
@@ -106,7 +112,11 @@ def _predict_image(projections, P, P_image):
         # Return the matrix
         return matrix
 
-    def _transform_stack(projections, P, P_image):
+    def _transform_stack(
+        projections: NDArray[typing.Any],
+        P: NDArray[typing.Any],
+        P_image: NDArray[typing.Any],
+    ) -> NDArray[typing.Any]:
         # Get matrices for the image
         R_data = _get_matrix_from_parameters(P)
         R_image = _get_matrix_from_parameters(P_image[None, :])
@@ -118,7 +128,7 @@ def _predict_image(projections, P, P_image):
         P = _get_parameters_from_matrix(R_data)
 
         # Get transform matrix
-        matrix = _get_matrix(P, projections.shape[1:])
+        matrix = _get_matrix(P, np.asarray(projections.shape[1:]))
 
         # Transform image
         return np.mean(
@@ -171,7 +181,13 @@ def _predict_coordinates(
         # Return the matrix
         return matrix
 
-    def _transform_coordinates(data, mask, P, P_image, image_size):
+    def _transform_coordinates(
+        data: NDArray[typing.Any],
+        mask: NDArray[np.bool_],
+        P: NDArray[typing.Any],
+        P_image: NDArray[typing.Any],
+        image_size: NDArray[np.integer],
+    ) -> NDArray[typing.Any]:
         # Get matrices for the image
         R_data = _get_matrix_from_parameters(P[None, :])
         R_image = _get_matrix_from_parameters(P_image[None, :])
@@ -201,7 +217,9 @@ def _predict_coordinates(
     return _transform_coordinates(data, mask, P, P_image, image_size)
 
 
-def compute_derivatives(predicted, image):
+def compute_derivatives(
+    predicted: NDArray[_ArrayT], image: NDArray[typing.Any]
+) -> tuple[NDArray[_ArrayT], NDArray[_ArrayT], NDArray[typing.Any]]:
     """
     Compute the image derivatives
 
@@ -227,8 +245,14 @@ def compute_optical_flow(Ix, Iy, It, Im):
     return V
 
 
-def _propagate(predicted, observed, image_mask, octave, data_initial):
-    image_size = np.array(predicted.shape)
+def _propagate(
+    predicted: NDArray[typing.Any],
+    observed: NDArray[typing.Any],
+    image_mask: NDArray[np.bool_],
+    octave: NDArray[np.int64],
+    data_initial: NDArray[typing.Any],
+) -> tuple[NDArray[typing.Any], NDArray[np.bool_]]:
+    image_size = np.asarray(predicted.shape)
 
     # Compute the derivatives
     Ix, Iy, It = compute_derivatives(predicted, observed)
@@ -335,7 +359,7 @@ def _validate(
     mask: NDArray[np.bool_],
     P: NDArray[typing.Any],
     image_size: NDArray[np.integer],
-):
+) -> NDArray[np.bool_]:
     positions_dst = data_observed[mask] / image_size[::-1]
     positions_src = data_predicted[mask] / image_size[::-1]
     min_samples = 4
@@ -380,7 +404,13 @@ def _validate(
     return mask
 
 
-def _refine_contours(projections, P, data, mask, octave):
+def _refine_contours(
+    projections: NDArray[typing.Any],
+    P: NDArray[typing.Any],
+    data: NDArray[typing.Any],
+    mask: NDArray[np.bool_],
+    octave: NDArray[np.int64],
+) -> tuple[NDArray[typing.Any], NDArray[np.bool_], NDArray[np.int64]]:
     """
     Refine the contour positions
 
@@ -453,7 +483,13 @@ def _refine_contours(projections, P, data, mask, octave):
     return data, mask, octave
 
 
-def _perform_refinement_macro_cycle(projections, P, data, mask, octave):
+def _perform_refinement_macro_cycle(
+    projections: NDArray[typing.Any],
+    P: NDArray[typing.Any],
+    data: NDArray[typing.Any],
+    mask: NDArray[np.bool_],
+    octave: NDArray[np.int64],
+):
     """
     Do the refinement macro cycle
 
@@ -512,8 +548,8 @@ def _contours_refine(
     def write_points(
         filename: str | PathLike[str],
         data: NDArray[typing.Any],
-        mask: NDArray[typing.Any],
-        octave: NDArray[typing.Any],
+        mask: NDArray[np.bool_],
+        octave: NDArray[np.int64],
     ) -> None:
         print("Writing contours to %s" % filename)
         np.savez(open(filename, "wb"), data=data, mask=mask, octave=octave)

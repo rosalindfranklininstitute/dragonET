@@ -14,10 +14,15 @@ import mrcfile  # type: ignore[import-untyped]
 import numpy as np
 from scipy.spatial.transform import Rotation
 
+import napari
+import napari.layers
+
 from dragonET import _stack_transform
 
 if typing.TYPE_CHECKING:
     from os import PathLike
+
+    from napari.viewer import Viewer
 
 
 def _contours_pick(
@@ -30,7 +35,6 @@ def _contours_pick(
     Pick the fiduccials manually
 
     """
-    import napari  # type: ignore
 
     def read_projections(filename: str | PathLike[str]) -> NDArray[typing.Any]:
         print("Reading projections from %s" % filename)
@@ -56,7 +60,12 @@ def _contours_pick(
             octave=contours["octave"],
         )
 
-    def set_contours(viewer, transform, contours, image_size) -> None:
+    def set_contours(
+        viewer: Viewer,
+        transform: NDArray[np.float64 | np.float32],
+        contours: dict[str, NDArray[typing.Any]],
+        image_size: NDArray[np.integer],
+    ) -> None:
         # Invert the transform
         transform = np.linalg.inv(transform)
 
@@ -77,7 +86,11 @@ def _contours_pick(
                 name = "Points [%d]" % index if index > 0 else "Points"
                 viewer.add_points(points, name=name, face_color="blue", size=5)
 
-    def get_contours(viewer, transform, image_size):
+    def get_contours(
+        viewer: Viewer,
+        transform: NDArray[np.float64 | np.float32],
+        image_size: NDArray[np.integer],
+    ) -> dict[str, NDArray[np.float64] | NDArray[np.bool_] | NDArray[np.int64]]:
         # Invert the transform
         # transform = np.linalg.inv(transform)
 
@@ -101,8 +114,8 @@ def _contours_pick(
                             "- Warning: Contour %d has more than 1 point per image, selecting one point"
                             % index
                         )
-                    data = np.zeros((transform.shape[0], 2))
-                    mask = np.zeros(transform.shape[0], dtype=bool)
+                    data = np.zeros((transform.shape[0], 2), dtype=np.float64)
+                    mask = np.zeros(transform.shape[0], dtype=np.bool_)
                     for z, y, x in points.tolist():
                         x, y, _ = (transform[int(z)] @ np.array([x, y, 1])).tolist()
                         x /= image_size[1]
@@ -112,11 +125,12 @@ def _contours_pick(
                     index += 1
                     contour_data.append(data[:, None, :])
                     contour_mask.append(mask[:, None])
+        contours: dict[str, NDArray[np.float64] | NDArray[np.bool_] | NDArray[np.int64]]
         contours = {
-            "data": np.concatenate(contour_data, axis=1),
-            "mask": np.concatenate(contour_mask, axis=1),
+            "data": np.concatenate(contour_data, axis=1, dtype=np.float64),
+            "mask": np.concatenate(contour_mask, axis=1, dtype=np.bool_),
         }
-        contours["octave"] = np.ones(contours["data"].shape[1])
+        contours["octave"] = np.ones(contours["data"].shape[1], dtype=np.int64)
         return contours
 
     def get_transform_matrix(
@@ -147,7 +161,9 @@ def _contours_pick(
         # Return the matrix
         return matrix
 
-    def transform_stack(projections, matrix):
+    def transform_stack(
+        projections: NDArray[typing.Any], matrix: NDArray[typing.Any]
+    ) -> NDArray[typing.Any]:
         print("Transforming stack")
         return _stack_transform.transform_stack(projections, matrix)
 
@@ -177,14 +193,16 @@ def _contours_pick(
     # Add the image layer
     viewer.add_image(projections, name="Projections")
 
+    image_size = np.asarray(projections.shape[1:])
+
     # Add the contours to the viewer
-    set_contours(viewer, transform, contours, projections.shape[1:])
+    set_contours(viewer, transform, contours, image_size)
 
     # Start Napari
     napari.run()
 
     # Get the points layers
-    contours = get_contours(viewer, transform, projections.shape[1:])
+    contours = get_contours(viewer, transform, image_size)
 
     # Write the contours
     write_contours(contours_out_filename, contours)

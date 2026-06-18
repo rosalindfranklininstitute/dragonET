@@ -21,12 +21,13 @@ if typing.TYPE_CHECKING:
 
     SupportedDevices = typing.Literal["gpu", "gpu_and_host"]
 
+
 def _prepare_astra_geometry(
     P: NDArray[typing.Any],
     pixel_size: float = 1,
     image_size: tuple = (0, 0),
-    axis=(0, 0, 1),
-    axis_origin=(0, 0, 0),
+    axis: tuple[float, float, float] = (0, 0, 1),
+    axis_origin: tuple[float, float, float] = (0, 0, 0),
 ) -> NDArray[typing.Any]:
     """
     Prepare the geometry vectors
@@ -73,10 +74,12 @@ def _prepare_astra_geometry(
         return U
 
     def prepare_sample_alignment_rotation_and_translation(
-        axis: NDArray[np.float64], axis_origin: NDArray[np.float64]
+        axis: tuple[float, float, float], axis_origin: tuple[float, float, float]
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-        U = matrix_to_rotate_a_onto_b(axis, np.array((0, 0, 1), dtype=np.float64))
-        return U, -axis_origin
+        U = matrix_to_rotate_a_onto_b(
+            np.asarray(axis), np.asarray((0, 0, 1), dtype=np.float64)
+        )
+        return U, -np.asarray(axis_origin)
 
     print("Preparing geometry with pixel size %f" % pixel_size)
     assert all(np.array(image_size) > 0)
@@ -186,8 +189,8 @@ def project_internal(
     volume: NDArray[typing.Any],
     P: NDArray[typing.Any],
     pixel_size: float,
-    axis: NDArray[np.float64],
-    axis_origin: NDArray[np.float64],
+    axis: tuple[float, float, float],
+    axis_origin: tuple[float, float, float],
     mode,
 ):
     """
@@ -255,15 +258,19 @@ def _project(
     P = np.array(model["transform"], dtype=float)
 
     # Get the vector to align to
-    axis = np.asarray(
-        normalise(model.get("axis", (1, 0, 0)))[::-1], copy=True, dtype=np.float64
-    )
-    axis_origin = np.asarray(
-        model.get("axis_origin", (0, 0, 0))[::-1], copy=True, dtype=np.float64
-    )
+    axis = normalise(model.get("axis", (1, 0, 0)))[::-1]
+
+    axis_origin = model.get("axis_origin", (0, 0, 0))[::-1]
 
     # Do the projection
-    projections = project_internal(volume, P, pixel_size, axis, axis_origin, device)
+    projections = project_internal(
+        volume,
+        P,
+        pixel_size,
+        (axis[0], axis[1], axis[2]),
+        (axis_origin[0], axis_origin[1], axis_origin[2]),
+        device,
+    )
 
     # Create a new file with the projected images
     write_projections(projections_filename, projections)

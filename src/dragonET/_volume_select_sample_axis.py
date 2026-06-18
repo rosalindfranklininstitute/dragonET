@@ -12,8 +12,11 @@ import yaml
 import mrcfile  # type: ignore[import-untyped]
 import numpy as np
 
+import napari
+import napari.layers
 
 if typing.TYPE_CHECKING:
+    from collections.abc import Iterable
     from os import PathLike
 
     from numpy.typing import NDArray
@@ -29,7 +32,6 @@ def _volume_select_sample_axis(
     Select sample axis
 
     """
-    import napari  # type: ignore
 
     def read_volume(filename: str | PathLike[str]) -> MrcMemmap:
         print("Reading volume from %s" % filename)
@@ -50,7 +52,7 @@ def _volume_select_sample_axis(
         return v
 
     def get_points(
-        layers: napari.layers.Points, data: NDArray[typing.Any]
+        layers: Iterable[napari.layers.Layer], data: NDArray[typing.Any]
     ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
         p1 = np.array((0, 0, 0))
         p2 = np.array((0, 1, 0))

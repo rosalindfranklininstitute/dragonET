@@ -23,7 +23,7 @@ if typing.TYPE_CHECKING:
     _ArrayT = typing.TypeVar("_ArrayT", np.integer, np.floating)
 
 
-def get_matrix_from_parameters(P):
+def get_matrix_from_parameters(P: NDArray[typing.Any]) -> NDArray[np.float64]:
     """
     Get the matrices from the parameters
 
@@ -36,20 +36,20 @@ def get_matrix_from_parameters(P):
     Rabc = Rotation.from_euler("yxz", np.stack([c, b, a]).T).as_matrix()
 
     # Construct the matrix from the parameters
-    R = np.full((P.shape[0], 4, 4), np.eye(4))
+    R = np.full((P.shape[0], 4, 4), np.eye(4), dtype=np.float64)
     R[:, :3, :3] = Rabc
     R[:, 0, 3] = P[:, 0]  # Shift X
     R[:, 1, 3] = P[:, 1]  # Shift Y
     return R
 
 
-def get_parameters_from_matrix(R):
+def get_parameters_from_matrix(R: NDArray[typing.Any]) -> NDArray[np.float64]:
     """
     Get the parameters from the matrix
 
     """
     euler = Rotation.from_matrix(R[:, :3, :3]).as_euler("yxz")
-    P = np.zeros((R.shape[0], 5))
+    P = np.zeros((R.shape[0], 5), dtype=np.float64)
     P[:, 0] = R[:, 0, 3]
     P[:, 1] = R[:, 1, 3]
     P[:, 2] = np.degrees(euler[:, 2])
@@ -58,7 +58,9 @@ def get_parameters_from_matrix(R):
     return P
 
 
-def predict_image(data: np.ndarray, P_data: np.ndarray, P_image: np.ndarray):
+def predict_image(
+    data: NDArray[typing.Any], P_data: NDArray[typing.Any], P_image: NDArray[typing.Any]
+):
     """
     Predict the image
 
@@ -96,7 +98,7 @@ def predict_image(data: np.ndarray, P_data: np.ndarray, P_image: np.ndarray):
 
     # Reconstruct the volume from the input images
     volume = dragonET._reconstruct.recon(
-        data, P_data, volume, 1, np.array((0, 1, 0)), np.array((0, 0, 0)), 1, "gpu"
+        data, P_data, volume, 1, (0, 1, 0), (0, 0, 0), 1, "gpu"
     )
 
     # Return the predicted image by projecting along the axis

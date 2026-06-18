@@ -22,12 +22,12 @@ if typing.TYPE_CHECKING:
 
 
 def _prepare_astra_geometry(
-    P: np.ndarray,
+    P: NDArray[typing.Any],
     pixel_size: float = 1,
     image_size: tuple = (0, 0),
-    axis=(0, 1, 0),
-    axis_origin=(0, 0, 0),
-) -> np.ndarray:
+    axis: tuple[float, float, float] = (0, 1, 0),
+    axis_origin: tuple[float, float, float] = (0, 0, 0),
+) -> NDArray[typing.Any]:
     """
     Prepare the geometry vectors
 
@@ -42,7 +42,9 @@ def _prepare_astra_geometry(
 
     """
 
-    def matrix_to_rotate_a_onto_b(a, b):
+    def matrix_to_rotate_a_onto_b(
+        a: NDArray[typing.Any], b: NDArray[typing.Any]
+    ) -> NDArray[typing.Any]:
         # Compute the unit vectors
         a = a / np.linalg.norm(a)
         b = b / np.linalg.norm(b)
@@ -71,13 +73,15 @@ def _prepare_astra_geometry(
         return U
 
     def prepare_sample_alignment_rotation_and_translation(
-        axis, axis_origin, image_size
-    ):
-        U = matrix_to_rotate_a_onto_b(axis, np.array((0, 1, 0)))
-        axis_origin = axis_origin * np.array(
+        axis: tuple[float, float, float],
+        axis_origin: tuple[float, float, float],
+        image_size: NDArray[np.integer],
+    ) -> tuple[NDArray[typing.Any], NDArray[typing.Any]]:
+        U = matrix_to_rotate_a_onto_b(np.asarray(axis), np.asarray((0, 1, 0)))
+        new_axis_origin = -np.asarray(axis_origin) * np.asarray(
             [image_size[1], image_size[0], image_size[1]]
         )
-        return U, -axis_origin
+        return U, new_axis_origin
 
     # print("Preparing geometry with pixel size %f" % pixel_size)
     assert all(np.array(image_size) > 0)
@@ -87,7 +91,7 @@ def _prepare_astra_geometry(
     # rotation matrix and translation that put a given line along the centre of
     # the reconstruction volume
     Rs, Ts = prepare_sample_alignment_rotation_and_translation(
-        axis, axis_origin, image_size
+        axis, axis_origin, np.asarray(image_size)
     )
 
     # The transformation
@@ -128,12 +132,12 @@ def _prepare_astra_geometry(
 
 
 def _reconstruct_with_astra(
-    projections: np.ndarray,
-    vectors: np.ndarray,
-    volume: np.ndarray,
+    projections: NDArray[typing.Any],
+    vectors: NDArray[typing.Any],
+    volume: NDArray[typing.Any],
     num_iterations: int = 1,
     device: str = "gpu",
-) -> np.ndarray:
+) -> NDArray[typing.Any]:
     """
     Do the reconstruction with astra
 
@@ -207,7 +211,16 @@ def _reconstruct_with_astra(
     return volume
 
 
-def recon(projections, P, volume, pixel_size, axis, axis_origin, num_iterations, mode):
+def recon(
+    projections: NDArray[typing.Any],
+    P: NDArray[typing.Any],
+    volume: NDArray[typing.Any],
+    pixel_size: float,
+    axis: tuple[float, float, float],
+    axis_origin: tuple[float, float, float],
+    num_iterations: int,
+    device: str,
+):
     """
     Do the reconstruction
 
@@ -219,7 +232,7 @@ def recon(projections, P, volume, pixel_size, axis, axis_origin, num_iterations,
     vectors = _prepare_astra_geometry(P, pixel_size, image_size, axis, axis_origin)
 
     # Do the reconstruction with astra
-    return _reconstruct_with_astra(projections, vectors, volume, num_iterations, mode)
+    return _reconstruct_with_astra(projections, vectors, volume, num_iterations, device)
 
 
 def _reconstruct(
@@ -304,8 +317,8 @@ def _reconstruct(
     assert P.shape[0] == projections_data.shape[0]
 
     # Get the vector to align to
-    axis = np.array(normalise(model.get("axis", (0, 1, 0)))[::-1])
-    axis_origin = np.array(model.get("axis_origin", (0, 0, 0))[::-1])
+    axis = normalise(model.get("axis", (0, 1, 0)))[::-1]
+    axis_origin = model.get("axis_origin", (0, 0, 0))[::-1]
 
     # Put the projections in sinogram order
     projections = np.swapaxes(projections_data, 0, 1)
@@ -322,7 +335,14 @@ def _reconstruct(
 
     # Do the reconstruction
     volume = recon(
-        projections, P, volume, pixel_size, axis, axis_origin, num_iterations, device
+        projections,
+        P,
+        volume,
+        pixel_size,
+        (axis[0], axis[1], axis[2]),
+        (axis_origin[0, axis_origin[1], axis_origin[2]]),
+        num_iterations,
+        device,
     )
 
     # Create a new file with the reconstructed volume

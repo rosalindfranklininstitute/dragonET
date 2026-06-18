@@ -26,14 +26,14 @@ def downsample_volume(data: NDArray[typing.Any], factor: int) -> NDArray[np.floa
 
     """
 
-    def is_power_of_2(n) -> bool:
+    def is_power_of_2(n: int) -> bool:
         return (n & (n - 1) == 0) and n != 0
 
     # Check rebin factor
     assert is_power_of_2(factor)
 
     # Downsample the volume
-    shape = np.array(data.shape) // np.array([factor, factor, factor])
+    shape = np.asarray(data.shape) // np.asarray([factor, factor, factor])
     print(
         "Rebinning volume by factor %d from (%d, %d, %d) -> (%d, %d, %d)"
         % (
@@ -130,7 +130,9 @@ def _volume_rebin(
             raise ValueError(f"No data in {filename}")
         return data
 
-    def write_volume(volume, filename: str | PathLike[str]) -> None:
+    def write_volume(
+        volume: NDArray[typing.Any], filename: str | PathLike[str]
+    ) -> None:
         print("Writing volume to %s" % filename)
         handle = mrcfile.new_mmap(
             filename,

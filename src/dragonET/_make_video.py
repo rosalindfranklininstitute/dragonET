@@ -18,7 +18,7 @@ if typing.TYPE_CHECKING:
     from numpy.typing import NDArray
 
 
-def rebin_stack(data: np.ndarray, factor: int) -> NDArray[np.float32]:
+def rebin_stack(data: NDArray[typing.Any], factor: int) -> NDArray[np.float32]:
     """
     Rebin the image stack
 
@@ -47,7 +47,7 @@ def rebin_stack(data: np.ndarray, factor: int) -> NDArray[np.float32]:
         new_data = np.zeros(shape)
         for i in range(data.shape[0]):
             print(f"Rebinning image {i}")
-            new_data[i] = data[i].reshape(temp_shape).sum(-1).sum(1).astype("float32")
+            new_data[i] = data[i].reshape(temp_shape).sum(-1).sum(1).astype(np.float32)
         data = new_data
     return data
 
@@ -74,7 +74,7 @@ def sum_stack(data: NDArray[typing.Any], factor: int) -> NDArray[np.float32]:
             shape[1],
             shape[2],
         )
-        data = data.reshape(shape).sum(1).astype("float32")
+        data = data.reshape(shape).sum(1).astype(np.float32)
     return data
 
 
@@ -85,8 +85,8 @@ def _make_video(
     swapaxis: bool = False,
     fps: float = 10,
     summed: int = 1,
-    scaled_vmin: int = 0,
-    scaled_vmax: int = 255,
+    scaled_vmin: float = 0,
+    scaled_vmax: float = 255,
 ) -> None:
     """
     Make a video

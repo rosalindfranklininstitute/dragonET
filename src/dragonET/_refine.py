@@ -538,11 +538,11 @@ def refine_model(
 
 
 def _refine(
-    model_in: str,
-    model_out: str,
-    contours: str,
-    plots_out: str | None = None,
-    info_out: str | None = None,
+    model_in: str | PathLike[str],
+    model_out: str | PathLike[str],
+    contours: str | PathLike[str],
+    plots_out: str | PathLike[str] | None = None,
+    info_out: str | PathLike[str] | None = None,
     fix: str | None = None,
     max_iter: int = 100,
     smoothness: float = 10,

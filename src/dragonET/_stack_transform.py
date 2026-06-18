@@ -31,6 +31,7 @@ def transform_stack(
             matrix[i, 0, 0] * X + matrix[i, 0, 1] * Y + matrix[i, 0, 2],
             matrix[i, 1, 0] * X + matrix[i, 1, 1] * Y + matrix[i, 1, 2],
         )
+        # TODO: Check whether this can be done outside the loop:
         images[i] = scipy.ndimage.map_coordinates(images[i], (Y, X))
     return images
 

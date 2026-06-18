@@ -127,7 +127,8 @@ def extract_features(
 
 
 def find_matching_features(
-    features: list[dict[str, typing.Any]], min_samples: int = 4
+    features: list[dict[str, typing.Any]],
+    min_samples: int = 4,
 ) -> tuple[NDArray[np.float64], dict[tuple[int, int], tuple[int, int]]]:
     # Initialise the transformation matrix for each image
     matrix = np.full((len(features), 3, 3), np.eye(3), dtype=np.float64)
@@ -308,7 +309,9 @@ def recentre_points(
     return matrix
 
 
-def construct_model(matrix, P0):
+def construct_model(
+    matrix: NDArray[typing.Any], P0: NDArray[typing.Any]
+) -> NDArray[np.float64]:
     # Get the initial angle
     a = np.radians(P0[0, 2])
 
@@ -328,7 +331,7 @@ def construct_model(matrix, P0):
     c = P0[:, 4]
 
     # Return the model
-    return np.stack([dx, dy, a, b, c], axis=1)
+    return np.stack([dx, dy, a, b, c], axis=1, dtype=np.float64)
 
 
 def track_first_and_last(
@@ -344,7 +347,9 @@ def track_first_and_last(
     """
 
     # Function to flip coordinates
-    def flip_coordinate(x):
+    def flip_coordinate(
+        x: NDArray[np.float64 | np.float32],
+    ) -> NDArray[np.float64 | np.float32]:
         return np.array((1 - x[0], x[1]))
 
     # Get the image size (reversed to be X, Y)
@@ -499,15 +504,20 @@ def _track(
             raise ValueError(f"No data in {filename}")
         return data
 
-    def read_model(filename) -> dict:
+    def read_model(filename: str | PathLike[str]) -> dict:
         print("Reading model from %s" % filename)
         return yaml.safe_load(open(filename, "r"))
 
-    def write_model(model, filename):
+    def write_model(model, filename: str | PathLike[str]) -> None:
         print("Writing model to %s" % filename)
         yaml.safe_dump(model, open(filename, "w"), default_flow_style=None)
 
-    def write_contours(filename, data, mask, octave):
+    def write_contours(
+        filename: str | PathLike[str],
+        data: NDArray[typing.Any],
+        mask: NDArray[np.bool_],
+        octave: NDArray[np.int64],
+    ) -> None:
         print("Writing contours to %s" % filename)
         np.savez(open(filename, "wb"), data=data, mask=mask, octave=octave)
 
