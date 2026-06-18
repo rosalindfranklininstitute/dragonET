@@ -5,20 +5,28 @@
 #
 # Author: James Parkhurst
 #
+from __future__ import annotations
+import typing
+import yaml
+
 import astra  # type: ignore[import-untyped]
 import mrcfile  # type: ignore[import-untyped]
 import numpy as np
-import yaml
 from scipy.spatial.transform import Rotation
+
+if typing.TYPE_CHECKING:
+    from os import PathLike
+
+    from numpy.typing import NDArray
 
 
 def _prepare_astra_geometry(
-    P: np.ndarray,
+    P: NDArray[typing.Any],
     pixel_size: float = 1,
     image_size: tuple = (0, 0),
-    axis=(0, 1, 0),
-    axis_origin=(0, 0, 0),
-) -> np.ndarray:
+    axis: tuple[float, float, float] = (0, 1, 0),
+    axis_origin: tuple[float, float, float] = (0, 0, 0),
+) -> NDArray[typing.Any]:
     """
     Prepare the geometry vectors
 
@@ -33,7 +41,9 @@ def _prepare_astra_geometry(
 
     """
 
-    def matrix_to_rotate_a_onto_b(a, b):
+    def matrix_to_rotate_a_onto_b(
+        a: NDArray[typing.Any], b: NDArray[typing.Any]
+    ) -> NDArray[typing.Any]:
         # Compute the unit vectors
         a = a / np.linalg.norm(a)
         b = b / np.linalg.norm(b)
@@ -62,13 +72,15 @@ def _prepare_astra_geometry(
         return U
 
     def prepare_sample_alignment_rotation_and_translation(
-        axis, axis_origin, image_size
-    ):
-        U = matrix_to_rotate_a_onto_b(axis, np.array((0, 1, 0)))
-        axis_origin = axis_origin * np.array(
+        axis: tuple[float, float, float],
+        axis_origin: tuple[float, float, float],
+        image_size: NDArray[np.integer],
+    ) -> tuple[NDArray[typing.Any], NDArray[typing.Any]]:
+        U = matrix_to_rotate_a_onto_b(np.asarray(axis), np.asarray((0, 1, 0)))
+        new_axis_origin = -np.asarray(axis_origin) * np.asarray(
             [image_size[1], image_size[0], image_size[1]]
         )
-        return U, -axis_origin
+        return U, new_axis_origin
 
     # print("Preparing geometry with pixel size %f" % pixel_size)
     assert all(np.array(image_size) > 0)
@@ -78,7 +90,7 @@ def _prepare_astra_geometry(
     # rotation matrix and translation that put a given line along the centre of
     # the reconstruction volume
     Rs, Ts = prepare_sample_alignment_rotation_and_translation(
-        axis, axis_origin, image_size
+        axis, axis_origin, np.asarray(image_size)
     )
 
     # The transformation
@@ -119,12 +131,12 @@ def _prepare_astra_geometry(
 
 
 def _reconstruct_with_astra(
-    projections: np.ndarray,
-    vectors: np.ndarray,
-    volume: np.ndarray,
+    projections: NDArray[typing.Any],
+    vectors: NDArray[typing.Any],
+    volume: NDArray[typing.Any],
     num_iterations: int = 1,
     device: str = "gpu",
-) -> np.ndarray:
+) -> NDArray[typing.Any]:
     """
     Do the reconstruction with astra
 
@@ -198,7 +210,16 @@ def _reconstruct_with_astra(
     return volume
 
 
-def recon(projections, P, volume, pixel_size, axis, axis_origin, num_iterations, mode):
+def recon(
+    projections: NDArray[typing.Any],
+    P: NDArray[typing.Any],
+    volume: NDArray[typing.Any],
+    pixel_size: float,
+    axis: tuple[float, float, float],
+    axis_origin: tuple[float, float, float],
+    num_iterations: int,
+    device: str,
+):
     """
     Do the reconstruction
 
@@ -210,19 +231,19 @@ def recon(projections, P, volume, pixel_size, axis, axis_origin, num_iterations,
     vectors = _prepare_astra_geometry(P, pixel_size, image_size, axis, axis_origin)
 
     # Do the reconstruction with astra
-    return _reconstruct_with_astra(projections, vectors, volume, num_iterations, mode)
+    return _reconstruct_with_astra(projections, vectors, volume, num_iterations, device)
 
 
 def _reconstruct(
-    projections_filename: str,
-    model_filename: str,
-    volume_filename: str,
-    initial_volume_filename: str | None = None,
+    projections_filename: str | PathLike[str],
+    model_filename: str | PathLike[str],
+    volume_filename: str | PathLike[str],
+    initial_volume_filename: str | PathLike[str] | None = None,
     volume_shape: tuple | None = None,
     pixel_size: float = 1,
     num_iterations: int = 1,
     device: str = "gpu",
-):
+) -> None:
     """
     Do the reconstruction
 
@@ -238,27 +259,34 @@ def _reconstruct(
 
     """
 
-    def read_model(filename):
+    def read_model(filename: str | PathLike[str]) -> typing.Any:
         print("Reading model from %s" % filename)
         return yaml.safe_load(open(filename))
 
-    def read_projections(filename):
+    def read_projections(filename: str | PathLike[str]) -> NDArray[typing.Any]:
         print("Reading projections from %s" % filename)
-        return mrcfile.mmap(filename)
+        data = mrcfile.mmap(filename).data
+        if data is None:
+            raise ValueError(f"No data in {filename}")
+        return data
 
-    def init_volume(filename, shape):
+    def init_volume(
+        filename: str | PathLike[str] | None, shape: int | tuple[int, ...]
+    ) -> NDArray[typing.Any | np.float32]:
         if filename:
             print("Reading initial volume from %s" % filename)
-            volume_file = mrcfile.open(filename)
-            volume = volume_file.data.copy()
+            data = mrcfile.open(filename).data
+            if data is None:
+                raise ValueError(f"No data in {filename}")
+            return np.asarray(data).copy()
         elif shape:
             print("Initialising volume with shape: (%d, %d, %d)" % shape)
-            volume = np.zeros(shape, dtype="float32")
-        else:
-            volume = None
-        return volume
+            return np.zeros(shape, dtype=np.float32)
+        raise ValueError("Failed to initialise volume, no filename or shape given")
 
-    def write_volume(filename, volume):
+    def write_volume(
+        filename: str | PathLike[str], volume: NDArray[typing.Any]
+    ) -> None:
         print("Writing volume to %s" % filename)
         outfile = mrcfile.new(filename, overwrite=True)
         outfile.set_data(volume)
@@ -266,7 +294,9 @@ def _reconstruct(
     def normalise(v):
         return v / np.linalg.norm(v)
 
-    def volume_shape_from_projections_shape(shape):
+    def volume_shape_from_projections_shape(
+        shape: NDArray[np.integer],
+    ) -> tuple[int, int, int]:
         return (
             shape[0],
             shape[2],
@@ -277,24 +307,26 @@ def _reconstruct(
     model = read_model(model_filename)
 
     # Read the projections data
-    projections_file = read_projections(projections_filename)
+    projections_data = read_projections(projections_filename)
 
     # Get the transform from the model
     P = np.array(model["transform"], dtype=float)
 
     # Check the input is consistent
-    assert P.shape[0] == projections_file.data.shape[0]
+    assert P.shape[0] == projections_data.shape[0]
 
     # Get the vector to align to
-    axis = np.array(normalise(model.get("axis", (0, 1, 0)))[::-1])
-    axis_origin = np.array(model.get("axis_origin", (0, 0, 0))[::-1])
+    axis = normalise(model.get("axis", (0, 1, 0)))[::-1]
+    axis_origin = model.get("axis_origin", (0, 0, 0))[::-1]
 
     # Put the projections in sinogram order
-    projections = np.swapaxes(projections_file.data, 0, 1)
+    projections = np.swapaxes(projections_data, 0, 1)
 
     # Initialise the volume shape if not provided
     if volume_shape is None:
-        volume_shape = volume_shape_from_projections_shape(projections.shape)
+        volume_shape = volume_shape_from_projections_shape(
+            np.asarray(projections.shape)
+        )
 
     # Initialise the volume. If a file is given, that is used as the volume.
     # Otherwise, initialise a volume of zeros of the desired share
@@ -302,7 +334,14 @@ def _reconstruct(
 
     # Do the reconstruction
     volume = recon(
-        projections, P, volume, pixel_size, axis, axis_origin, num_iterations, device
+        projections,
+        P,
+        volume,
+        pixel_size,
+        (axis[0], axis[1], axis[2]),
+        (axis_origin[0, axis_origin[1], axis_origin[2]]),
+        num_iterations,
+        device,
     )
 
     # Create a new file with the reconstructed volume

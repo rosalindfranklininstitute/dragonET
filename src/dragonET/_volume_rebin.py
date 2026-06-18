@@ -5,24 +5,35 @@
 #
 # Author: James Parkhurst
 #
+from __future__ import annotations
+import typing
+
 import mrcfile  # type: ignore[import-untyped]
+from mrcfile.utils import mode_from_dtype
 import numpy as np
 
+if typing.TYPE_CHECKING:
+    from os import PathLike
 
-def downsample_volume(data: np.ndarray, factor: int) -> np.ndarray:
+    from numpy.typing import NDArray
+
+    _ArrayT = typing.TypeVar("_ArrayT", np.integer, np.floating)
+
+
+def downsample_volume(data: NDArray[typing.Any], factor: int) -> NDArray[np.float32]:
     """
     Rebin the volume
 
     """
 
-    def is_power_of_2(n):
+    def is_power_of_2(n: int) -> bool:
         return (n & (n - 1) == 0) and n != 0
 
     # Check rebin factor
     assert is_power_of_2(factor)
 
     # Downsample the volume
-    shape = np.array(data.shape) // np.array([factor, factor, factor])
+    shape = np.asarray(data.shape) // np.asarray([factor, factor, factor])
     print(
         "Rebinning volume by factor %d from (%d, %d, %d) -> (%d, %d, %d)"
         % (
@@ -43,19 +54,19 @@ def downsample_volume(data: np.ndarray, factor: int) -> np.ndarray:
         shape[2],
         factor,
     )
-    data = data.reshape(shape).sum(-1).sum(-2).sum(-3).astype("float32")
+    data = data.reshape(shape).sum(-1).sum(-2).sum(-3).astype(np.float32)
 
     # Return the sampled data
     return data
 
 
-def upsample_volume(data: np.ndarray, factor: int) -> np.ndarray:
+def upsample_volume(data: NDArray[_ArrayT], factor: int) -> NDArray[_ArrayT]:
     """
     Rebin the volume
 
     """
 
-    def is_power_of_2(n):
+    def is_power_of_2(n) -> bool:
         return (n & (n - 1) == 0) and n != 0
 
     # Check rebin factor
@@ -88,40 +99,49 @@ def upsample_volume(data: np.ndarray, factor: int) -> np.ndarray:
     return data
 
 
-def rebin_volume(data: np.ndarray, factor: float) -> np.ndarray:
+def rebin_volume(
+    data: NDArray[_ArrayT], factor: float
+) -> NDArray[_ArrayT | np.float32]:
     """
     Rebin the volume
 
     """
     if factor > 1:
-        data = downsample_volume(data, int(np.round(factor)))
+        return downsample_volume(data, int(np.round(factor)))
     elif factor < 1:
-        data = upsample_volume(data, int(np.round(1.0 / factor)))
+        return upsample_volume(data, int(np.round(1.0 / factor)))
     return data
 
 
 def _volume_rebin(
-    volume_in: str,
-    volume_out: str,
+    volume_in: str | PathLike[str],
+    volume_out: str | PathLike[str],
     factor: float,
-):
+) -> None:
     """
     Rebin the volume
 
     """
 
-    def read_volume(filename):
+    def read_volume(filename: str | PathLike[str]) -> NDArray[typing.Any]:
         print("Reading volume from %s" % filename)
-        return mrcfile.mmap(filename).data
+        data = mrcfile.mmap(filename).data
+        if data is None:
+            raise ValueError(f"No data in {filename}")
+        return data
 
-    def write_volume(volume, filename):
+    def write_volume(
+        volume: NDArray[typing.Any], filename: str | PathLike[str]
+    ) -> None:
         print("Writing volume to %s" % filename)
         handle = mrcfile.new_mmap(
             filename,
             volume.shape,
-            mrc_mode=mrcfile.utils.mode_from_dtype(volume.dtype),
+            mrc_mode=mode_from_dtype(volume.dtype),
             overwrite=True,
         )
+        if handle.data is None:
+            raise ValueError(f"No data in {filename}")
         handle.data[:] = volume
 
     # Read the volume

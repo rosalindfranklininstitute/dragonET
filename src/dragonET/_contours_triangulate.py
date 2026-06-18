@@ -5,12 +5,20 @@
 #
 # Author: James Parkhurst
 #
-import numpy as np
+from __future__ import annotations
+import typing
 import yaml
+
+import numpy as np
 from scipy.spatial.transform import Rotation
 
+if typing.TYPE_CHECKING:
+    from os import PathLike
 
-def triangulate(dx, dy, a, b, c, data, mask):
+    from numpy.typing import NDArray
+
+
+def triangulate(dx, dy, a, b, c, data, mask: NDArray[np.bool_]) -> NDArray[np.float64]:
     """
     Triangulate the points
 
@@ -34,7 +42,7 @@ def triangulate(dx, dy, a, b, c, data, mask):
     W = W - t[:, None]
 
     # Compute the 3D spot positions
-    S = np.zeros((3, num_points))
+    S = np.zeros((3, num_points), dtype=np.float64)
     for j in range(num_points):
         Mj = M[:, j]
         W0 = W[Mj, j]
@@ -44,9 +52,9 @@ def triangulate(dx, dy, a, b, c, data, mask):
 
 
 def _contours_triangulate(
-    model_in: str,
-    contours_in: str,
-    points_out: str,
+    model_in: str | PathLike[str],
+    contours_in: str | PathLike[str],
+    points_out: str | PathLike[str],
 ):
     """
     Triangulate the contours

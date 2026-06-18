@@ -4,20 +4,35 @@
 #
 # Author: James Parkhurst
 #
+from __future__ import annotations
+import typing
+import yaml
+
 import mrcfile  # type: ignore[import-untyped]
 import numpy as np
 import scipy.ndimage
-import scipy.signal
-import yaml
 
 from scipy.spatial.transform import Rotation
+from scipy.signal.windows import gaussian
 from skimage.measure import ransac
 from skimage.transform import EuclideanTransform
 
-import dragonET
+from dragonET import _refine, _stack_predict, _stack_transform
+
+if typing.TYPE_CHECKING:
+    from os import PathLike
+
+    from numpy.typing import NDArray
+
+    _ArrayT = typing.TypeVar("_ArrayT", np.integer, np.floating)
 
 
-def _refine_model(P, data, mask, image_size):
+def _refine_model(
+    P: NDArray[typing.Any],
+    data: NDArray[typing.Any],
+    mask: NDArray[np.bool_],
+    image_size: NDArray[np.integer],
+) -> NDArray[typing.Any]:
     """
     Refine the geometric model
 
@@ -42,14 +57,14 @@ def _refine_model(P, data, mask, image_size):
     mask = mask[:, select]
     data = data[:, select]
 
-    dx, dy, a, b, c, rmsd = dragonET._refine.refine_model(
+    dx, dy, a, b, c, rmsd = _refine.refine_model(
         dx, dy, a, b, c, data, mask, active=active
     )
 
     active[3, :] = 1  # b
     active[3, idx] = 0  # b
 
-    dx, dy, a, b, c, rmsd = dragonET._refine.refine_model(
+    dx, dy, a, b, c, rmsd = _refine.refine_model(
         dx, dy, a, b, c, data, mask, active=active
     )
 
@@ -59,14 +74,18 @@ def _refine_model(P, data, mask, image_size):
     return P
 
 
-def _predict_image(projections, P, P_image):
-    def _get_matrix_from_parameters(P):
-        return dragonET._stack_predict.get_matrix_from_parameters(P)
+def _predict_image(
+    projections: NDArray[typing.Any],
+    P: NDArray[typing.Any],
+    P_image: NDArray[typing.Any],
+):
+    def _get_matrix_from_parameters(P: NDArray[typing.Any]) -> NDArray[np.float64]:
+        return _stack_predict.get_matrix_from_parameters(P)
 
-    def _get_parameters_from_matrix(R):
-        return dragonET._stack_predict.get_parameters_from_matrix(R)
+    def _get_parameters_from_matrix(R: NDArray[typing.Any]) -> NDArray[np.float64]:
+        return _stack_predict.get_parameters_from_matrix(R)
 
-    def _get_matrix(P, image_size):
+    def _get_matrix(P: NDArray[typing.Any], image_size: NDArray[np.integer]):
         # Get the origin translation
         oy, ox = np.array(image_size) / 2
 
@@ -92,7 +111,11 @@ def _predict_image(projections, P, P_image):
         # Return the matrix
         return matrix
 
-    def _transform_stack(projections, P, P_image):
+    def _transform_stack(
+        projections: NDArray[typing.Any],
+        P: NDArray[typing.Any],
+        P_image: NDArray[typing.Any],
+    ) -> NDArray[typing.Any]:
         # Get matrices for the image
         R_data = _get_matrix_from_parameters(P)
         R_image = _get_matrix_from_parameters(P_image[None, :])
@@ -104,11 +127,11 @@ def _predict_image(projections, P, P_image):
         P = _get_parameters_from_matrix(R_data)
 
         # Get transform matrix
-        matrix = _get_matrix(P, projections.shape[1:])
+        matrix = _get_matrix(P, np.asarray(projections.shape[1:]))
 
         # Transform image
         return np.mean(
-            dragonET._stack_transform.transform_stack(projections, matrix),
+            _stack_transform.transform_stack(projections, matrix),
             axis=0,
         )
 
@@ -118,12 +141,18 @@ def _predict_image(projections, P, P_image):
     return I, M
 
 
-def _predict_coordinates(data, mask, P, P_image, image_size):
-    def _get_matrix_from_parameters(P):
-        return dragonET._stack_predict.get_matrix_from_parameters(P)
+def _predict_coordinates(
+    data: NDArray[typing.Any],
+    mask: NDArray[np.bool_],
+    P: NDArray[typing.Any],
+    P_image: NDArray[typing.Any],
+    image_size: NDArray[np.integer],
+) -> NDArray[typing.Any]:
+    def _get_matrix_from_parameters(P: NDArray[typing.Any]) -> NDArray[typing.Any]:
+        return _stack_predict.get_matrix_from_parameters(P)
 
     def _get_parameters_from_matrix(R):
-        return dragonET._stack_predict.get_parameters_from_matrix(R)
+        return _stack_predict.get_parameters_from_matrix(R)
 
     def _get_matrix(P, image_size):
         # Get the origin translation
@@ -151,7 +180,13 @@ def _predict_coordinates(data, mask, P, P_image, image_size):
         # Return the matrix
         return matrix
 
-    def _transform_coordinates(data, mask, P, P_image, image_size):
+    def _transform_coordinates(
+        data: NDArray[typing.Any],
+        mask: NDArray[np.bool_],
+        P: NDArray[typing.Any],
+        P_image: NDArray[typing.Any],
+        image_size: NDArray[np.integer],
+    ) -> NDArray[typing.Any]:
         # Get matrices for the image
         R_data = _get_matrix_from_parameters(P[None, :])
         R_image = _get_matrix_from_parameters(P_image[None, :])
@@ -181,7 +216,9 @@ def _predict_coordinates(data, mask, P, P_image, image_size):
     return _transform_coordinates(data, mask, P, P_image, image_size)
 
 
-def compute_derivatives(predicted, image):
+def compute_derivatives(
+    predicted: NDArray[_ArrayT], image: NDArray[typing.Any]
+) -> tuple[NDArray[_ArrayT], NDArray[_ArrayT], NDArray[typing.Any]]:
     """
     Compute the image derivatives
 
@@ -195,8 +232,8 @@ def compute_derivatives(predicted, image):
 
 def compute_optical_flow(Ix, Iy, It, Im):
     # Compute the weights (2.3 approximates hamming)
-    Wx = scipy.signal.windows.gaussian(Ix.shape[1], (Ix.shape[1] / 2) / (2.3))
-    Wy = scipy.signal.windows.gaussian(Iy.shape[0], (Iy.shape[0] / 2) / (2.3))
+    Wx = gaussian(Ix.shape[1], (Ix.shape[1] / 2) / (2.3))
+    Wy = gaussian(Iy.shape[0], (Iy.shape[0] / 2) / (2.3))
     W = Wx[None, :] * Wy[:, None]
     W = (Im * np.sqrt(W)).flatten()
 
@@ -207,8 +244,14 @@ def compute_optical_flow(Ix, Iy, It, Im):
     return V
 
 
-def _propagate(predicted, observed, image_mask, octave, data_initial):
-    image_size = np.array(predicted.shape)
+def _propagate(
+    predicted: NDArray[typing.Any],
+    observed: NDArray[typing.Any],
+    image_mask: NDArray[np.bool_],
+    octave: NDArray[np.int64],
+    data_initial: NDArray[typing.Any],
+) -> tuple[NDArray[typing.Any], NDArray[np.bool_]]:
+    image_size = np.asarray(predicted.shape)
 
     # Compute the derivatives
     Ix, Iy, It = compute_derivatives(predicted, observed)
@@ -309,7 +352,13 @@ def _propagate(predicted, observed, image_mask, octave, data_initial):
     return data_observed, mask_observed
 
 
-def _validate(data_predicted, data_observed, mask, P, image_size):
+def _validate(
+    data_predicted: NDArray[typing.Any],
+    data_observed: NDArray[typing.Any],
+    mask: NDArray[np.bool_],
+    P: NDArray[typing.Any],
+    image_size: NDArray[np.integer],
+) -> NDArray[np.bool_]:
     positions_dst = data_observed[mask] / image_size[::-1]
     positions_src = data_predicted[mask] / image_size[::-1]
     min_samples = 4
@@ -322,11 +371,16 @@ def _validate(data_predicted, data_observed, mask, P, image_size):
         residual_threshold=2 / 512,  # 0.01,
         max_trials=1000,
     )
+
+    transform = typing.cast(EuclideanTransform, transform)
+    if not isinstance(inliers, list):
+        raise ValueError("Failed to get inliers")
+
     print(
         "Selecting %d/%d points as inliers with rotation of %.2f (deg) and x/y translation of (%.2f, %.2f)"
         % (
             np.count_nonzero(inliers),
-            inliers.size,
+            len(inliers),
             np.degrees(transform.rotation),
             transform.translation[0] * image_size[1],
             transform.translation[1] * image_size[0],
@@ -349,7 +403,13 @@ def _validate(data_predicted, data_observed, mask, P, image_size):
     return mask
 
 
-def _refine_contours(projections, P, data, mask, octave):
+def _refine_contours(
+    projections: NDArray[typing.Any],
+    P: NDArray[typing.Any],
+    data: NDArray[typing.Any],
+    mask: NDArray[np.bool_],
+    octave: NDArray[np.int64],
+) -> tuple[NDArray[typing.Any], NDArray[np.bool_], NDArray[np.int64]]:
     """
     Refine the contour positions
 
@@ -422,7 +482,13 @@ def _refine_contours(projections, P, data, mask, octave):
     return data, mask, octave
 
 
-def _perform_refinement_macro_cycle(projections, P, data, mask, octave):
+def _perform_refinement_macro_cycle(
+    projections: NDArray[typing.Any],
+    P: NDArray[typing.Any],
+    data: NDArray[typing.Any],
+    mask: NDArray[np.bool_],
+    octave: NDArray[np.int64],
+):
     """
     Do the refinement macro cycle
 
@@ -448,11 +514,11 @@ def _perform_refinement_macro_cycle(projections, P, data, mask, octave):
 
 
 def _contours_refine(
-    projections_in: str,
-    model_in: str,
-    model_out: str,
-    contours_in: str,
-    contours_out: str,
+    projections_in: str | PathLike[str],
+    model_in: str | PathLike[str],
+    model_out: str | PathLike[str],
+    contours_in: str | PathLike[str],
+    contours_out: str | PathLike[str],
     num_macro_cycles: int = 1,
 ):
     """
@@ -460,24 +526,34 @@ def _contours_refine(
 
     """
 
-    def read_projections(filename):
+    def read_projections(filename: str | PathLike[str]) -> NDArray[typing.Any]:
         print("Reading projections from %s" % filename)
-        return mrcfile.mmap(filename).data
+        data = mrcfile.mmap(filename).data
+        if data is None:
+            raise ValueError(f"No data in {filename}")
+        return data
 
-    def read_points(filename) -> tuple:
+    def read_points(
+        filename: str | PathLike[str],
+    ) -> tuple[NDArray[typing.Any], NDArray[typing.Any], NDArray[typing.Any]]:
         print("Reading points from %s" % filename)
         handle = np.load(filename)
         return handle["data"], handle["mask"], handle["octave"]
 
-    def read_model(filename) -> dict:
+    def read_model(filename: str | PathLike[str]) -> typing.Any:
         print("Reading model from %s" % filename)
         return yaml.safe_load(open(filename, "r"))
 
-    def write_points(filename, data, mask, octave):
+    def write_points(
+        filename: str | PathLike[str],
+        data: NDArray[typing.Any],
+        mask: NDArray[np.bool_],
+        octave: NDArray[np.int64],
+    ) -> None:
         print("Writing contours to %s" % filename)
         np.savez(open(filename, "wb"), data=data, mask=mask, octave=octave)
 
-    def write_model(model, filename):
+    def write_model(model: typing.Any, filename: str | PathLike[str]) -> None:
         print("Writing model to %s" % filename)
         yaml.safe_dump(model, open(filename, "w"), default_flow_style=None)
 

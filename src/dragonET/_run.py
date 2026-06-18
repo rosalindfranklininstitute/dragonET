@@ -5,7 +5,9 @@
 #
 # Author: James Parkhurst
 #
+from __future__ import annotations
 import os
+import typing
 
 from dragonET._new import _new
 from dragonET._track import _track
@@ -15,10 +17,13 @@ from dragonET._refine import _refine
 from dragonET._stack_rebin import _stack_rebin
 from dragonET._stack_transform import _stack_transform
 
+if typing.TYPE_CHECKING:
+    from os import PathLike
+
 
 def _run(
-    projections_filename: str,
-    angles_filename: str,
+    projections_filename: str | PathLike[str],
+    angles_filename: str | PathLike[str],
     global_rotation: float = 0,
     rebin_factor: int = 1,
     device: str = "gpu",

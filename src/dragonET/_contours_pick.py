@@ -5,47 +5,54 @@
 #
 # Author: James Parkhurst
 #
+from __future__ import annotations
+import typing
+import yaml
+
 import mrcfile  # type: ignore[import-untyped]
 import numpy as np
-import yaml
 from scipy.spatial.transform import Rotation
 
-import dragonET
+import napari
+import napari.layers
+
+from dragonET import _stack_transform
+
+if typing.TYPE_CHECKING:
+    from os import PathLike
+
+    from numpy.typing import NDArray
+
+    from napari.viewer import Viewer
 
 
 def _contours_pick(
-    projections_filename: str,
-    contours_out_filename: str,
-    contours_in_filename: str | None = None,
-    model_in_filename: str | None = None,
-):
+    projections_filename: str | PathLike[str],
+    contours_out_filename: str | PathLike[str],
+    contours_in_filename: str | PathLike[str],
+    model_in_filename: str | PathLike[str],
+) -> None:
     """
     Pick the fiduccials manually
 
     """
-    import napari  # type: ignore
 
-    def read_projections(filename):
+    def read_projections(filename: str | PathLike[str]) -> NDArray[typing.Any]:
         print("Reading projections from %s" % filename)
-        return mrcfile.mmap(filename)
+        data = mrcfile.mmap(filename).data
+        if data is None:
+            raise ValueError(f"No data in {filename}")
+        return data
 
-    def read_contours(filename):
-        if filename:
-            print("Reading contours from %s" % filename)
-            return np.load(filename)
-        else:
-            contours = None
-        return contours
+    def read_contours(filename: str | PathLike[str]) -> typing.Any:
+        print("Reading contours from %s" % filename)
+        return np.load(filename)
 
-    def read_model(filename):
-        if filename:
-            print("Reading model from %s" % filename)
-            model = yaml.safe_load(open(filename))
-        else:
-            model = None
-        return model
+    def read_model(filename: str | PathLike[str]) -> typing.Any:
+        print("Reading model from %s" % filename)
+        return yaml.safe_load(open(filename))
 
-    def write_contours(filename, contours):
+    def write_contours(filename: str | PathLike[str], contours) -> None:
         print("Writing contours to %s" % filename)
         np.savez(
             filename,
@@ -54,7 +61,12 @@ def _contours_pick(
             octave=contours["octave"],
         )
 
-    def set_contours(viewer, transform, contours, image_size):
+    def set_contours(
+        viewer: Viewer,
+        transform: NDArray[np.float64 | np.float32],
+        contours: dict[str, NDArray[typing.Any]],
+        image_size: NDArray[np.integer],
+    ) -> None:
         # Invert the transform
         transform = np.linalg.inv(transform)
 
@@ -75,7 +87,11 @@ def _contours_pick(
                 name = "Points [%d]" % index if index > 0 else "Points"
                 viewer.add_points(points, name=name, face_color="blue", size=5)
 
-    def get_contours(viewer, transform, image_size):
+    def get_contours(
+        viewer: Viewer,
+        transform: NDArray[np.float64 | np.float32],
+        image_size: NDArray[np.integer],
+    ) -> dict[str, NDArray[np.float64] | NDArray[np.bool_] | NDArray[np.int64]]:
         # Invert the transform
         # transform = np.linalg.inv(transform)
 
@@ -99,8 +115,8 @@ def _contours_pick(
                             "- Warning: Contour %d has more than 1 point per image, selecting one point"
                             % index
                         )
-                    data = np.zeros((transform.shape[0], 2))
-                    mask = np.zeros(transform.shape[0], dtype=bool)
+                    data = np.zeros((transform.shape[0], 2), dtype=np.float64)
+                    mask = np.zeros(transform.shape[0], dtype=np.bool_)
                     for z, y, x in points.tolist():
                         x, y, _ = (transform[int(z)] @ np.array([x, y, 1])).tolist()
                         x /= image_size[1]
@@ -110,14 +126,17 @@ def _contours_pick(
                     index += 1
                     contour_data.append(data[:, None, :])
                     contour_mask.append(mask[:, None])
+        contours: dict[str, NDArray[np.float64] | NDArray[np.bool_] | NDArray[np.int64]]
         contours = {
-            "data": np.concatenate(contour_data, axis=1),
-            "mask": np.concatenate(contour_mask, axis=1),
+            "data": np.concatenate(contour_data, axis=1, dtype=np.float64),
+            "mask": np.concatenate(contour_mask, axis=1, dtype=np.bool_),
         }
-        contours["octave"] = np.ones(contours["data"].shape[1])
+        contours["octave"] = np.ones(contours["data"].shape[1], dtype=np.int64)
         return contours
 
-    def get_transform_matrix(P, image_size):
+    def get_transform_matrix(
+        P: NDArray[typing.Any], image_size: NDArray[np.integer]
+    ) -> NDArray[np.float64]:
         # Get the origin translation
         oy, ox = np.array(image_size) / 2
 
@@ -143,12 +162,14 @@ def _contours_pick(
         # Return the matrix
         return matrix
 
-    def transform_stack(projections, matrix):
+    def transform_stack(
+        projections: NDArray[typing.Any], matrix: NDArray[typing.Any]
+    ) -> NDArray[typing.Any]:
         print("Transforming stack")
-        return dragonET._stack_transform.transform_stack(projections, matrix)
+        return _stack_transform.transform_stack(projections, matrix)
 
     # Load the projections data
-    projections = read_projections(projections_filename).data
+    projections = read_projections(projections_filename)
 
     # Read the contours
     contours = read_contours(contours_in_filename)
@@ -159,7 +180,7 @@ def _contours_pick(
     # Get the transform matrix
     if model is not None:
         transform = get_transform_matrix(
-            np.array(model["transform"]), projections.shape[1:]
+            np.array(model["transform"]), np.asarray(projections.shape[1:])
         )
     else:
         transform = np.full((projections.shape[0], 3, 3), np.eye(3))
@@ -173,14 +194,16 @@ def _contours_pick(
     # Add the image layer
     viewer.add_image(projections, name="Projections")
 
+    image_size = np.asarray(projections.shape[1:])
+
     # Add the contours to the viewer
-    set_contours(viewer, transform, contours, projections.shape[1:])
+    set_contours(viewer, transform, contours, image_size)
 
     # Start Napari
     napari.run()
 
     # Get the points layers
-    contours = get_contours(viewer, transform, projections.shape[1:])
+    contours = get_contours(viewer, transform, image_size)
 
     # Write the contours
     write_contours(contours_out_filename, contours)

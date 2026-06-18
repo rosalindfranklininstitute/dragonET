@@ -4,17 +4,29 @@
 # Copyright (C) 2024 Diamond Light Source and Rosalind Franklin Institute
 #
 # Author: James Parkhurst
+from __future__ import annotations
+import typing
+import yaml
+
 import mrcfile  # type: ignore[import-untyped]
 import numpy as np
 import scipy.ndimage
-import yaml
 
 from scipy.spatial.transform import Rotation
 
-import dragonET._contours_triangulate
+from dragonET import _contours_triangulate, _stack_predict
+
+if typing.TYPE_CHECKING:
+    from os import PathLike
+
+    from numpy.typing import NDArray
+
+    _ArrayT = typing.TypeVar("_ArrayT", np.integer, np.floating)
 
 
-def compute_derivatives(predicted, image):
+def compute_derivatives(
+    predicted: NDArray[typing.Any], image: NDArray[typing.Any]
+) -> tuple[NDArray[typing.Any], NDArray[typing.Any], NDArray[typing.Any]]:
     """
     Compute the image derivatives
 
@@ -26,7 +38,9 @@ def compute_derivatives(predicted, image):
     return Ix, Iy, It
 
 
-def compute_optical_flow(Ix, Iy, It):
+def compute_optical_flow(
+    Ix: NDArray[typing.Any], Iy: NDArray[typing.Any], It: NDArray[typing.Any]
+) -> NDArray[np.float64]:
     # Compute the weights
     # Wx = scipy.signal.windows.gaussian(Ix.shape[0], Ix.shape[0] / (2*3))
     # Wy = scipy.signal.windows.gaussian(Iy.shape[0], Iy.shape[0] / (2*3))
@@ -41,19 +55,27 @@ def compute_optical_flow(Ix, Iy, It):
 
 
 def extend_contours_for_image(
-    stack, image, P_stack, P_image, points, data, mask, octave, max_threshold=0.8
-):
+    stack: NDArray[typing.Any],
+    image: NDArray[typing.Any],
+    P_stack: NDArray[typing.Any],
+    P_image: NDArray[typing.Any],
+    points: NDArray[typing.Any],
+    data: NDArray[typing.Any],
+    mask: NDArray[np.bool_],
+    octave: NDArray[np.int64],
+    max_threshold: float = 0.8,
+) -> tuple[NDArray[np.float64], NDArray[np.bool_]]:
     """
     Try to extend the contours onto the image
 
     """
 
     # Initialise the data and mask
-    data_image = np.zeros((1, data.shape[1], data.shape[2]))
-    mask_image = np.zeros((1, mask.shape[1]))
+    data_image = np.zeros((1, data.shape[1], data.shape[2]), dtype=np.float64)
+    mask_image = np.zeros((1, mask.shape[1]), dtype=np.bool_)
 
     # Predict the image from the images
-    predicted = dragonET._stack_predict.predict_image(stack, P_stack, P_image)
+    predicted = _stack_predict.predict_image(stack, P_stack, P_image)
 
     # Compute the derivatives
     Ix, Iy, It = compute_derivatives(predicted, image)
@@ -137,7 +159,14 @@ def extend_contours_for_image(
     return data_image, mask_image
 
 
-def extend_contours_internal(projections, P, data, mask, octave, subset_size: int):
+def extend_contours_internal(
+    projections: NDArray[typing.Any],
+    P: NDArray[typing.Any],
+    data: NDArray[_ArrayT],
+    mask: NDArray[np.bool_],
+    octave: NDArray[np.int64],
+    subset_size: int,
+) -> tuple[NDArray[_ArrayT], NDArray[np.bool_]]:
     """
     Try to extend the contours
 
@@ -154,7 +183,7 @@ def extend_contours_internal(projections, P, data, mask, octave, subset_size: in
     c = np.radians(P[:, 4])
 
     # Triangulate the 3D points
-    points = dragonET._contours_triangulate.triangulate(dx, dy, a, b, c, data, mask)
+    points = _contours_triangulate.triangulate(dx, dy, a, b, c, data, mask)
 
     # Copy input
     data = data.copy()
@@ -186,31 +215,41 @@ def extend_contours_internal(projections, P, data, mask, octave, subset_size: in
 
 
 def _contours_extend(
-    projections_in: str,
-    model_in: str,
-    contours_in: str,
-    contours_out: str,
+    projections_in: str | PathLike[str],
+    model_in: str | PathLike[str],
+    contours_in: str | PathLike[str],
+    contours_out: str | PathLike[str],
     subset_size: int,
-):
+) -> None:
     """
     Extend the contours
 
     """
 
-    def read_projections(filename):
+    def read_projections(filename: str | PathLike[str]) -> NDArray[typing.Any]:
         print("Reading projections from %s" % filename)
-        return mrcfile.mmap(filename).data
+        data = mrcfile.mmap(filename).data
+        if data is None:
+            raise ValueError(f"No data in {filename}")
+        return data
 
-    def read_points(filename) -> tuple:
+    def read_points(
+        filename: str | PathLike[str],
+    ) -> tuple[NDArray[typing.Any], NDArray[np.bool_], NDArray[np.int64]]:
         print("Reading points from %s" % filename)
         handle = np.load(filename)
         return handle["data"], handle["mask"], handle["octave"]
 
-    def read_model(filename) -> dict:
+    def read_model(filename: str | PathLike[str]) -> dict:
         print("Reading model from %s" % filename)
         return yaml.safe_load(open(filename, "r"))
 
-    def write_points(filename, data, mask, octave):
+    def write_points(
+        filename: str | PathLike[str],
+        data: NDArray[typing.Any],
+        mask: NDArray[np.bool_],
+        octave: NDArray[np.int64],
+    ) -> None:
         print("Writing contours to %s" % filename)
         np.savez(open(filename, "wb"), data=data, mask=mask, octave=octave)
 

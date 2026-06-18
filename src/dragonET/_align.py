@@ -5,14 +5,27 @@
 #
 # Author: James Parkhurst
 #
+from __future__ import annotations
+import typing
+import yaml
+
 import mrcfile  # type: ignore[import-untyped]
 import numpy as np
 import scipy
 import torch
-import yaml
+
+if typing.TYPE_CHECKING:
+    from collections.abc import Sequence
+    from os import PathLike
+
+    from numpy.typing import NDArray
+
+    _ArrayType = typing.TypeVar("_ArrayType", np.integer, np.floating)
 
 
-def align_single(X: torch.Tensor, Y: torch.Tensor) -> tuple:
+def align_single(
+    X: torch.Tensor, Y: torch.Tensor
+) -> tuple[torch.Tensor, NDArray[np.int64]]:
     """
 
     Compute the cross coefficient of multiple correlation
@@ -76,7 +89,7 @@ def align_single(X: torch.Tensor, Y: torch.Tensor) -> tuple:
 
 def select_reference_images(
     data: torch.Tensor, ref_index: int, max_images: int = 10
-) -> tuple[torch.Tensor, np.ndarray]:
+) -> tuple[torch.Tensor, NDArray[np.int64]]:
     """
     Select the N closest reference images to fit to
 
@@ -99,7 +112,9 @@ def select_reference_images(
     return data, select
 
 
-def fourier_shift_image(data: torch.Tensor, shift) -> torch.Tensor:
+def fourier_shift_image(
+    data: torch.Tensor, shift: float | Sequence[float | int]
+) -> torch.Tensor:
     """
     Transform an image
 
@@ -111,26 +126,32 @@ def fourier_shift_image(data: torch.Tensor, shift) -> torch.Tensor:
 
 
 def align_stack(
-    data: np.ndarray,
-    angles: np.ndarray,
-    shifts: np.ndarray,
+    data: NDArray[typing.Any],
+    angles: NDArray[np.float64],
+    shifts: NDArray[np.float64],
     max_shift: float = 0.25,
     max_iter: int = 10,
     max_images: int = 3,
     device: str = "gpu",
-):
+) -> NDArray[np.float64]:
     """
     Align the stack
 
     """
 
-    def normalise(x):
+    def normalise(x: torch.Tensor) -> torch.Tensor:
         return (x - x.mean()) / x.std()
 
-    def find_nearest(x, v):
+    def find_nearest(
+        x: NDArray[_ArrayType], v: int
+    ) -> int | float | NDArray[_ArrayType]:
         return x[np.abs(x - v).argmin()]
 
-    def initialise(data, shifts, device):
+    def initialise(
+        data: NDArray[typing.Any],
+        shifts: NDArray[np.float64 | np.float32],
+        device: torch.Device,
+    ) -> torch.Tensor:
         # Init FFTs, filter, do initial shift, and do the whole thing in Fourier space
         fft_data = torch.zeros(data.shape, dtype=torch.complex64)
         for j in range(fft_data.shape[0]):
@@ -289,29 +310,32 @@ def align_stack(
 
 
 def _align(
-    projections_in: str,
-    model_in: str,
-    model_out: str,
+    projections_in: str | PathLike[str],
+    model_in: str | PathLike[str],
+    model_out: str | PathLike[str],
     reference_image: int | None = None,
     max_shift: float = 0.25,
     max_iter: int = 10,
     max_images: int = 3,
     device: str = "gpu",
-):
+) -> None:
     """
     Do the alignment
 
     """
 
-    def read_projections(filename):
+    def read_projections(filename: str | PathLike[str]) -> NDArray[typing.Any]:
         print("Reading projections from %s" % filename)
-        return mrcfile.mmap(filename).data
+        data = mrcfile.mmap(filename).data
+        if data is None:
+            raise ValueError(f"No data in {filename}")
+        return data
 
-    def read_model(filename) -> dict:
+    def read_model(filename: str | PathLike[str]) -> dict:
         print("Reading model from %s" % filename)
         return yaml.safe_load(open(filename, "r"))
 
-    def write_model(model, filename):
+    def write_model(model, filename: str | PathLike[str]) -> None:
         print("Writing model to %s" % filename)
         yaml.safe_dump(model, open(filename, "w"), default_flow_style=None)
 

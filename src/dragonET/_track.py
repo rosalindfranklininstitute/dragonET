@@ -5,6 +5,7 @@
 #
 # Author: James Parkhurst
 #
+from __future__ import annotations
 from collections import defaultdict
 import typing
 
@@ -18,14 +19,21 @@ from skimage.feature import SIFT, match_descriptors  # , plot_matches
 from skimage.measure import ransac
 from skimage.transform import EuclideanTransform
 
+if typing.TYPE_CHECKING:
+    from os import PathLike
 
-def rebin_stack(data: np.ndarray, factor: int) -> np.ndarray:
+    from numpy.typing import NDArray
+
+    _ArrayT = typing.TypeVar("_ArrayT", np.integer, np.floating)
+
+
+def rebin_stack(data: NDArray[typing.Any], factor: int) -> NDArray[typing.Any]:
     """
     Rebin the image stack
 
     """
 
-    def is_power_of_2(n):
+    def is_power_of_2(n: int) -> bool:
         return (n & (n - 1) == 0) and n != 0
 
     # Check rebin factor
@@ -49,16 +57,34 @@ def rebin_stack(data: np.ndarray, factor: int) -> np.ndarray:
     return data
 
 
-def _detect_and_extract(projection, descriptor_extractor, image_size, i, counter):  #ndarray, int
+def _detect_and_extract(
+    projection: NDArray[typing.Any],
+    descriptor_extractor: SIFT,
+    image_size: NDArray[np.integer],
+    i: int,
+    counter: int,
+) -> dict[str, NDArray[typing.Any]]:
     descriptor_extractor.detect_and_extract(projection)
+
+    if descriptor_extractor.positions is None:
+        raise ValueError(f"SIFT positions are None in projection {i:d}/{counter:d}")
+    elif descriptor_extractor.descriptors is None:
+        raise ValueError(f"SIFT descriptors are None in projection {i:d}/{counter:d}")
+    elif descriptor_extractor.octaves is None:
+        raise ValueError(f"SIFT octaves are None in projection {i:d}/{counter:d}")
+    elif descriptor_extractor.scales is None:
+        raise ValueError(f"SIFT scales are None in projection {i:d}/{counter:d}")
+    elif descriptor_extractor.orientations is None:
+        raise ValueError(f"SIFT orientations are None in projection {i:d}/{counter:d}")
+
+    feature_dict: dict[str, NDArray[typing.Any]]
     feature_dict = {
-        "keypoints": descriptor_extractor.positions[:, ::-1]
-        / image_size[None, ::-1],
+        "keypoints": descriptor_extractor.positions[:, ::-1] / image_size[None, ::-1],
         "descriptors": descriptor_extractor.descriptors,
         "octaves": descriptor_extractor.octaves,  # + rebin_factor_octave,
         "scales": descriptor_extractor.scales,  # + rebin_factor_octave,
         "orientations": descriptor_extractor.orientations,
-        }
+    }
 
     # it's not projection.shape[0]
     print(
@@ -70,14 +96,17 @@ def _detect_and_extract(projection, descriptor_extractor, image_size, i, counter
 
 
 def extract_features(
-    projections: np.ndarray, threads: int
+    projections: NDArray[typing.Any], threads: int
 ) -> list[dict[str, typing.Any]]:
     # Get the image size
     image_size = np.array(projections.shape[1:])
 
     # initialise SIFT parameters, and format starmap inputs
     sift = SIFT(upsampling=1, n_scales=32, n_octaves=32, n_hist=32, n_ori=32)
-    projection_SIFT_pairs = [(projections[i], sift, image_size, i, projections.shape[0]) for i in range(projections.shape[0])]
+    projection_SIFT_pairs = [
+        (projections[i], sift, image_size, i, projections.shape[0])
+        for i in range(projections.shape[0])
+    ]
 
     features = []
 
@@ -88,16 +117,21 @@ def extract_features(
     else:
         print("Mate, are you sure you want to run this with a single thread?")
         for projection, sift, image_size, i, projection_shape in projection_SIFT_pairs:
-            features.append(_detect_and_extract(projection, sift, image_size, i, projection_shape))
+            features.append(
+                _detect_and_extract(projection, sift, image_size, i, projection_shape)
+            )
 
     if not features:
         raise ValueError("Features vector is empty")
     return features
 
 
-def find_matching_features(features, min_samples=4):
+def find_matching_features(
+    features: list[dict[str, typing.Any]],
+    min_samples: int = 4,
+) -> tuple[NDArray[np.float64], dict[tuple[int, int], tuple[int, int]]]:
     # Initialise the transformation matrix for each image
-    matrix = np.full((len(features), 3, 3), np.eye(3))
+    matrix = np.full((len(features), 3, 3), np.eye(3), dtype=np.float64)
 
     # Initialise the list of matches
     match_list = {}
@@ -156,6 +190,10 @@ def find_matching_features(features, min_samples=4):
                 max_trials=1000,
             )
 
+            transform = typing.cast(EuclideanTransform, transform)
+            if not isinstance(inliers, list):
+                raise ValueError("Failed to get inliers")
+
             # Check the number of inliers
             assert np.count_nonzero(inliers) >= min_samples
 
@@ -185,7 +223,10 @@ def find_matching_features(features, min_samples=4):
     return matrix, match_list
 
 
-def construct_data_matrix(features, match_list):
+def construct_data_matrix(
+    features: list[dict[str, typing.Any]],
+    match_list: dict[tuple[int, int], tuple[int, int]],
+) -> tuple[NDArray[typing.Any], NDArray[np.bool_], NDArray[np.int64]]:
     # Check if the point is already part of an existing contour
     def find(key_i):
         for key, value in contours.items():
@@ -207,9 +248,9 @@ def construct_data_matrix(features, match_list):
     num_points = len(contours)
 
     # Construct the data matrix and mask
-    data = np.zeros((num_frames, num_points, 2))
-    mask = np.zeros((num_frames, num_points), dtype=bool)
-    octave = np.zeros(num_points, dtype=int)
+    data = np.zeros((num_frames, num_points, 2), dtype=np.float64)
+    mask = np.zeros((num_frames, num_points), dtype=np.bool_)
+    octave = np.zeros(num_points, dtype=np.int64)
     for index, key in enumerate(contours):
         octave[index] = features[key[0]]["octaves"][key[1]]
         for frame, feature_index in [key] + list(contours[key]):
@@ -232,7 +273,12 @@ def construct_data_matrix(features, match_list):
     return data, mask, octave
 
 
-def recentre_points(data, mask, matrix, origin=(0, 0)):
+def recentre_points(
+    data: NDArray[typing.Any],
+    mask: NDArray[np.bool_],
+    matrix: NDArray[_ArrayT],
+    origin: tuple[float, float] = (0, 0),
+) -> NDArray[_ArrayT]:
     # Compute the initial translation which brings the points on each image
     # closest to the origin
     Ox, Oy = origin
@@ -263,7 +309,9 @@ def recentre_points(data, mask, matrix, origin=(0, 0)):
     return matrix
 
 
-def construct_model(matrix, P0):
+def construct_model(
+    matrix: NDArray[typing.Any], P0: NDArray[typing.Any]
+) -> NDArray[np.float64]:
     # Get the initial angle
     a = np.radians(P0[0, 2])
 
@@ -283,17 +331,25 @@ def construct_model(matrix, P0):
     c = P0[:, 4]
 
     # Return the model
-    return np.stack([dx, dy, a, b, c], axis=1)
+    return np.stack([dx, dy, a, b, c], axis=1, dtype=np.float64)
 
 
-def track_first_and_last(projections, data, mask, octave, rebin_factor, min_samples):
+def track_first_and_last(
+    projections: NDArray[typing.Any],
+    data: NDArray[_ArrayT],
+    mask: NDArray[np.bool_],
+    octave: NDArray[np.int64],
+    min_samples: int,
+) -> tuple[NDArray[_ArrayT], NDArray[np.bool_], NDArray[np.int64]]:
     """
     Track features across the first and last images if they are around 180 degrees apart
 
     """
 
     # Function to flip coordinates
-    def flip_coordinate(x):
+    def flip_coordinate(
+        x: NDArray[np.float64 | np.float32],
+    ) -> NDArray[np.float64 | np.float32]:
         return np.array((1 - x[0], x[1]))
 
     # Get the image size (reversed to be X, Y)
@@ -355,23 +411,25 @@ def track_first_and_last(projections, data, mask, octave, rebin_factor, min_samp
 
 
 def track_stack(
-    projections,
-    P,
-    rebin_factor=8,
-    min_samples=4,
-    threads=1,
-):
+    projections: NDArray[typing.Any],
+    P: NDArray[typing.Any],
+    rebin_factor: int = 8,
+    min_samples: int = 4,
+    threads: int = 1,
+) -> tuple[
+    NDArray[typing.Any], NDArray[np.bool_], NDArray[typing.Any], NDArray[typing.Any]
+]:
     """
     Do the alignment
 
     """
 
-    def rescale(a):
+    def rescale(a: NDArray[typing.Any]) -> NDArray[np.float64]:
         s1 = 1 / (np.max(a) - np.min(a))
         s0 = -s1 * a.min()
         return s0 + s1 * a
 
-    def angular_difference_180(a, b):
+    def angular_difference_180(a: float, b: float) -> float:
         return np.abs(
             np.degrees(np.arccos(np.cos(np.radians(a) - np.radians(b)))) - 180
         )
@@ -408,7 +466,7 @@ def track_stack(
     # Try to track features across the end of the scan
     if len(P) > 2 and angular_difference_180(P[0, 4], P[-1, 4]) < 10:
         data, mask, octave = track_first_and_last(
-            rebinned_projections, data, mask, octave, rebin_factor, min_samples
+            rebinned_projections, data, mask, octave, min_samples
         )
 
     # Recentre the points around the origin. This calculates the optimal matrix
@@ -428,30 +486,38 @@ def track_stack(
 
 
 def _track(
-    projections_in: str,
-    model_in: str,
-    model_out: str,
-    contours_out: str,
+    projections_in: str | PathLike[str],
+    model_in: str | PathLike[str],
+    model_out: str | PathLike[str],
+    contours_out: str | PathLike[str],
     threads: int,
-):
+) -> None:
     """
     Do the alignment
 
     """
 
-    def read_projections(filename):
+    def read_projections(filename: str | PathLike[str]) -> NDArray[typing.Any]:
         print("Reading projections from %s" % filename)
-        return mrcfile.mmap(filename).data
+        data = mrcfile.mmap(filename).data
+        if data is None:
+            raise ValueError(f"No data in {filename}")
+        return data
 
-    def read_model(filename) -> dict:
+    def read_model(filename: str | PathLike[str]) -> dict:
         print("Reading model from %s" % filename)
         return yaml.safe_load(open(filename, "r"))
 
-    def write_model(model, filename):
+    def write_model(model, filename: str | PathLike[str]) -> None:
         print("Writing model to %s" % filename)
         yaml.safe_dump(model, open(filename, "w"), default_flow_style=None)
 
-    def write_contours(filename, data, mask, octave):
+    def write_contours(
+        filename: str | PathLike[str],
+        data: NDArray[typing.Any],
+        mask: NDArray[np.bool_],
+        octave: NDArray[np.int64],
+    ) -> None:
         print("Writing contours to %s" % filename)
         np.savez(open(filename, "wb"), data=data, mask=mask, octave=octave)
 

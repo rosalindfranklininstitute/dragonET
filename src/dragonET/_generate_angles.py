@@ -5,24 +5,32 @@
 #
 # Author: James Parkhurst
 #
+from __future__ import annotations
+import typing
+
 import mrcfile  # type: ignore[import-untyped]
 import numpy as np
 
+if typing.TYPE_CHECKING:
+    from os import PathLike
+
+    from mrcfile.mrcmemmap import MrcMemmap
+
 
 def _generate_angles(
-    projections_filename: str,
-    angles_filename: str,
-):
+    projections_filename: str | PathLike[str],
+    angles_filename: str | PathLike[str],
+) -> None:
     """
     Generate an angles.rawtlt file.
 
     """
 
-    def read_projections(filename):
+    def read_projections(filename) -> MrcMemmap:
         print("Reading projections from %s" % filename)
         return mrcfile.mmap(filename)
 
-    def write_angles(filename, angles):
+    def write_angles(filename, angles) -> None:
         print("Write angles to %s" % filename)
         with open(filename, "w") as outfile:
             for a in angles:
@@ -32,15 +40,27 @@ def _generate_angles(
     # Load the projections data
     projections_file = read_projections(projections_filename)
 
+    if projections_file.data is None:
+        raise ValueError(f"No data in {projections_filename}")
+
     # Check the header for the extended header. If the extended header exists
     # then use the angles as the rawtlt angles, otherwise, lets just assume
     # that the angular range is 180 degrees.
-    if projections_file.header.exttyp in [b"FEI1", b"FEI2"]:
-        assert len(projections_file.indexed_extended_header.shape) == 1
-        assert (
+    if (
+        projections_file.header is not None
+        and projections_file.indexed_extended_header is not None
+        and projections_file.header.exttyp in [b"FEI1", b"FEI2"]
+    ):
+        if len(projections_file.indexed_extended_header.shape) != 1:
+            raise ValueError("Extended header contains the wrong number of axes")
+        if (
             projections_file.indexed_extended_header.shape[0]
-            == projections_file.data.shape[0]
-        )
+            != projections_file.data.shape[0]
+        ):
+            raise ValueError(
+                "Mismatch between the number of frames and the extended header"
+            )
+
         extended_header = projections_file.indexed_extended_header
         angles = extended_header["Alpha tilt"]
     else:
