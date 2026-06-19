@@ -476,7 +476,7 @@ def track_stack(
     if len(P) > 2 and angular_diff < 10:
         # Scale max_ratio between 0.95 and 0.8 based on how close together the
         # first and last projections are.
-        max_ratio = 0.95 + min(angular_diff / 25, 0.15)
+        max_ratio = 0.95 - min(angular_diff / 25, 0.15)
         data, mask, octave = track_first_and_last(
             rebinned_projections,
             data,
