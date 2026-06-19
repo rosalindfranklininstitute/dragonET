@@ -121,7 +121,6 @@ def extract_features(
         with Pool(processes=threads) as p:
             features = p.starmap(_detect_and_extract, projection_SIFT_pairs)
     else:
-        print("Mate, are you sure you want to run this with a single thread?")
         for projection, sift, image_size, i, projection_shape in projection_SIFT_pairs:
             features.append(
                 _detect_and_extract(projection, sift, image_size, i, projection_shape)
