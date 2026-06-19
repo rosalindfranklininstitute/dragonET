@@ -101,7 +101,7 @@ def _detect_and_extract(
 
 
 def extract_features(
-    projections: NDArray[typing.Any], threads: int
+    projections: NDArray[typing.Any], processes: int
 ) -> list[dict[str, typing.Any]]:
     # Get the image size
     image_size = np.array(projections.shape[1:])
@@ -115,10 +115,10 @@ def extract_features(
 
     features = []
 
-    print(f"Starting feature extraction with {threads} processes...")
+    print(f"Starting feature extraction with {processes} processes...")
     # multiprocessing starmap of the detect and extract function for speed
-    if threads > 1:
-        with Pool(processes=threads) as p:
+    if processes > 1:
+        with Pool(processes=processes) as p:
             features = p.starmap(_detect_and_extract, projection_SIFT_pairs)
     else:
         for projection, sift, image_size, i, projection_shape in projection_SIFT_pairs:
@@ -366,7 +366,7 @@ def track_first_and_last(
     first_and_last_images[1] = np.flip(projections[-1], axis=1)
 
     # Extract the image features
-    features = extract_features(first_and_last_images, threads=1)
+    features = extract_features(first_and_last_images, processes=1)
 
     # Find matching features and compute initial transform between images
     _, match_list = find_matching_features(features, min_samples)
@@ -423,7 +423,7 @@ def track_stack(
     P: NDArray[typing.Any],
     rebin_factor: int = 8,
     min_samples: int = 4,
-    threads: int = 1,
+    processes: int = 1,
 ) -> tuple[
     NDArray[typing.Any], NDArray[np.bool_], NDArray[typing.Any], NDArray[typing.Any]
 ]:
@@ -460,7 +460,7 @@ def track_stack(
     P = P[angle_ordered_indexes, ...]
 
     # Extract the image features
-    features = extract_features(rebinned_projections, threads=threads)
+    features = extract_features(rebinned_projections, processes=processes)
 
     # Find matching features and compute initial transform between images
     matrix, match_list = find_matching_features(features, min_samples)
@@ -498,7 +498,7 @@ def _track(
     model_in: str | PathLike[str],
     model_out: str | PathLike[str],
     contours_out: str | PathLike[str],
-    threads: int,
+    processes: int,
 ) -> None:
     """
     Do the alignment
@@ -542,7 +542,7 @@ def _track(
     P = np.array(model["transform"], dtype=float)
 
     # Extract some contours
-    data, mask, octave, P = track_stack(projections, P, threads=threads)
+    data, mask, octave, P = track_stack(projections, P, processes=processes)
 
     # Update the model and convert back to degrees
     model["transform"] = P.tolist()
