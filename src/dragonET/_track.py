@@ -369,7 +369,7 @@ def track_first_and_last(
     features = extract_features(first_and_last_images, processes=1)
 
     # Find matching features and compute initial transform between images
-    _, match_list = find_matching_features(features, min_samples)
+    _, match_list = find_matching_features(features, min_samples, max_ratio=max_ratio)
 
     if not match_list:
         raise ValueError("Failed to find matches between first and last images")
