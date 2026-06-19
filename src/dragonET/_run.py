@@ -27,7 +27,7 @@ def _run(
     global_rotation: float = 0,
     rebin_factor: int = 1,
     device: str = "gpu",
-    threads: int = 1,
+    processes: int = 1,
 ) -> None:
     """
     Run the automated pipeline
@@ -83,7 +83,7 @@ def _run(
             initial_model_filename,
             tracked_model_filename,
             tracked_contours_filename,
-            threads=threads,
+            processes=processes,
         )
 
     # Refine the initial model based on the contours (fix=bc)

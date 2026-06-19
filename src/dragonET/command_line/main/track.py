@@ -66,13 +66,13 @@ def add_arguments(parser: ArgumentParser) -> None:
         ),
     )
     parser.add_argument(
-        "--threads",
+        "--processes",
         type=int,
         default=1,
-        dest="threads",
+        dest="processes",
         help=(
             """
-            Number of threads to perform tracking with.
+            Number of processes to perform tracking with.
             """
         ),
     )
@@ -94,7 +94,7 @@ def run(namespace: Namespace) -> None:
         namespace.model_in,
         namespace.model_out,
         namespace.contours_out,
-        namespace.threads,
+        namespace.processes,
     )
 
     # Write some timing stats
