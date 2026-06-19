@@ -150,7 +150,7 @@ def align_stack(
     def initialise(
         data: NDArray[typing.Any],
         shifts: NDArray[np.float64 | np.float32],
-        device: torch.Device,
+        device: torch.device,
     ) -> torch.Tensor:
         # Init FFTs, filter, do initial shift, and do the whole thing in Fourier space
         fft_data = torch.zeros(data.shape, dtype=torch.complex64)
