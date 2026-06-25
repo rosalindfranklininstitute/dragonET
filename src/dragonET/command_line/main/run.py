@@ -56,7 +56,7 @@ def add_arguments(parser: ArgumentParser) -> None:
     )
     parser.add_argument(
         "-r",
-        "--global_rotation",
+        "--global-rotation",
         type=float,
         default=0,
         dest="global_rotation",

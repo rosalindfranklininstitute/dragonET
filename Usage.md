@@ -420,7 +420,7 @@ dragonET run -p PROJECTIONS [-a ANGLES] [-r GLOBAL_ROTATION] [-f REBIN_FACTOR] [
 **Arguments:**
 - `-p, --projections`: The projection images (required)
 - `-a, --angles`: The angles in the rawtlt file (optional, will be generated if not provided)
-- `-r, --global_rotation`: The global in plane rotation (degrees) (default: 0)
+- `-r, --global-rotation`: The global in plane rotation (degrees) (default: 0)
 - `-f, --rebin-factor`: The rebin factor (must be a power of 2) (default: 1)
 - `--device`: The device settings to use (choices: "gpu", "gpu_and_host", "host") (default: "gpu")
 
@@ -445,7 +445,7 @@ dragonET new -p PROJECTIONS -a ANGLES [-m MODEL] [-r GLOBAL_ROTATION]
 - `-p, --projections`: The projection images (required)
 - `-a, --angles`: The angles in the rawtlt file (required)
 - `-m, --model`: A YAML file describing the initial model (default: "initial_model.yaml")
-- `-r, --global_rotation`: The global in plane rotation (degrees) (default: 0)
+- `-r, --global-rotation`: The global in plane rotation (degrees) (default: 0)
 
 ### dragonET track
 
