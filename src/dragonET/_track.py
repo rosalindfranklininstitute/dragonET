@@ -131,99 +131,148 @@ def extract_features(
     return features
 
 
+def _find_matching_features(
+    features_i: dict[str, typing.Any],
+    features_j: dict[str, typing.Any],
+    i: int,
+    j: int,
+    min_samples: int,
+) -> tuple[
+    dict[tuple[int, int], tuple[int, typing.Any]],
+    EuclideanTransform,
+]:
+
+    # Initialise the dict of matches
+    match_list: dict[tuple[int, int], tuple[int, typing.Any]] = {}
+
+    # Match the features
+    matches = match_descriptors(
+        features_i["descriptors"],
+        features_j["descriptors"],
+        max_ratio=0.95,
+        cross_check=True,
+    )
+
+    # Get the octaves
+    octaves_i, octaves_j = (
+        features_i["octaves"][matches[:, 0]],
+        features_j["octaves"][matches[:, 1]],
+    )
+
+    # Select only those points which have matching octaves
+    matches = matches[octaves_i == octaves_j, :]
+
+    # Get the orientations
+    orientations_i, orientations_j = (
+        features_i["orientations"][matches[:, 0]],
+        features_j["orientations"][matches[:, 1]],
+    )
+
+    # Compute the angular difference and select those with an angular
+    # difference less than the number of divisions used to find the
+    # orientation
+    zn = np.exp(1j * (orientations_i - orientations_j))
+    angle_diff = np.abs(np.angle(zn) - np.angle(np.median(zn)))
+    select_orientation = angle_diff < (2 * np.pi / 16)
+
+    # Select only those with matching orientations
+    matches = matches[select_orientation, :]
+
+    # Get the positions
+    positions_i, positions_j = (
+        features_i["keypoints"][matches[:, 0]],
+        features_j["keypoints"][matches[:, 1]],
+    )
+
+    # Only bother if we have enough samples
+    try:
+        assert len(positions_i) >= min_samples
+
+        # Compute the Euclidean transform
+        transform, inliers = ransac(
+            (positions_i, positions_j),
+            EuclideanTransform,
+            min_samples=min_samples,
+            residual_threshold=0.009765625,  # 0.01,
+            max_trials=1000,
+        )
+
+        if not isinstance(transform, EuclideanTransform):
+            raise ValueError("Failed to get transform")
+        elif not isinstance(inliers, list):
+            raise ValueError("Failed to get inliers")
+
+        # Check the number of inliers
+        assert np.count_nonzero(inliers) >= min_samples
+
+        # Add the list of matches to a dictionary.
+        for index in np.where(inliers)[0]:
+            key_i = (i, matches[index, 0])
+            key_j = (j, matches[index, 1])
+            match_list[key_i] = key_j
+
+        # matrix must be updated out of the loop,
+        # but this should be not a significant slowdown
+    except Exception:
+        inliers = np.zeros(positions_i.shape[0], dtype=bool)
+
+    print(
+        "Matched images (%d, %d): fitted %d points out of %d matches from (%d, %d) features"
+        % (
+            i + 1,
+            j + 1,
+            np.count_nonzero(inliers),
+            matches.shape[0],
+            len(features_i["keypoints"]),
+            len(features_j["keypoints"]),
+        )
+    )
+
+    return match_list, transform  # type: ignore
+
+
 def find_matching_features(
     features: list[dict[str, typing.Any]],
+    processes: int,
     min_samples: int = 4,
 ) -> tuple[NDArray[np.float64], dict[tuple[int, int], tuple[int, int]]]:
     # Initialise the transformation matrix for each image
     matrix = np.full((len(features), 3, 3), np.eye(3), dtype=np.float64)
 
-    # Initialise the list of matches
-    match_list = {}
+    # Initialise the dict of matches
+    match_list: dict[tuple[int, int], tuple[int, typing.Any]] = {}
 
-    # Match features across adjacent images
+    # Initialise a container to hold output from the starmap
+    match_lists_and_transforms = []
+
+    # Assemble targets to match features across adjacent images
+    targets: list[tuple[typing.Any, typing.Any, int, int, int]] = []
     for i, j in enumerate(range(1, len(features))):
-        # Match the features
-        matches = match_descriptors(
-            features[i]["descriptors"],
-            features[j]["descriptors"],
-            max_ratio=0.95,
-            cross_check=True,
-        )
+        targets.append((features[i], features[j], i, j, min_samples))
 
-        # Get the octaves
-        octaves_i, octaves_j = (
-            features[i]["octaves"][matches[:, 0]],
-            features[j]["octaves"][matches[:, 1]],
-        )
-
-        # Select only those points which have matching octaves
-        matches = matches[octaves_i == octaves_j, :]
-
-        # Get the orientations
-        orientations_i, orientations_j = (
-            features[i]["orientations"][matches[:, 0]],
-            features[j]["orientations"][matches[:, 1]],
-        )
-
-        # Compute the angular difference and select those with an angular
-        # difference less than the number of divisions used to find the
-        # orientation
-        zn = np.exp(1j * (orientations_i - orientations_j))
-        angle_diff = np.abs(np.angle(zn) - np.angle(np.median(zn)))
-        select_orientation = angle_diff < (2 * np.pi / 16)
-
-        # Select only those with matching orientations
-        matches = matches[select_orientation, :]
-
-        # Get the positions
-        positions_i, positions_j = (
-            features[i]["keypoints"][matches[:, 0]],
-            features[j]["keypoints"][matches[:, 1]],
-        )
-
-        # Only bother if we have enough samples
-        try:
-            assert len(positions_i) >= min_samples
-
-            # Compute the Euclidean transform
-            transform, inliers = ransac(
-                (positions_i, positions_j),
-                EuclideanTransform,
-                min_samples=min_samples,
-                residual_threshold=0.009765625,  # 0.01,
-                max_trials=1000,
+    # multiprocessing starmap of the detect and extract function for speed
+    if processes > 1:
+        with Pool(processes=processes) as p:
+            match_lists_and_transforms = p.starmap(_find_matching_features, targets)
+    else:
+        for target_i, target_j, i, j, _ in targets:
+            match_lists_and_transforms.append(
+                _find_matching_features(
+                    target_i, target_j, i, j, min_samples=min_samples
+                )
             )
 
-            transform = typing.cast(EuclideanTransform, transform)
-            if not isinstance(inliers, list):
-                raise ValueError("Failed to get inliers")
+    # iterate through and assemble the match list dictionary and transformation matrix
+    for i, j in enumerate(range(1, len(match_lists_and_transforms) + 1), 0):
+        # append the first set of matches to the match_list
+        match_list.update(match_lists_and_transforms[i][0])
+        # functionally, j - 1 == i, but this may change with different update schemes
+        matrix[j] = match_lists_and_transforms[i][1].params @ matrix[i]
 
-            # Check the number of inliers
-            assert np.count_nonzero(inliers) >= min_samples
-
-            # Add the list of matches to a dictionary.
-            for index in np.where(inliers)[0]:
-                key_i = (i, matches[index, 0])
-                key_j = (j, matches[index, 1])
-                match_list[key_i] = key_j
-
-            # Update the matrix
-            matrix[j] = transform.params @ matrix[j - 1]
-        except Exception:
-            inliers = np.zeros(positions_i.shape[0], dtype=bool)
-
-        print(
-            "Matching images (%d, %d): fitted %d points out of %d matches from (%d, %d) features"
-            % (
-                i + 1,
-                j + 1,
-                np.count_nonzero(inliers),
-                matches.shape[0],
-                len(features[i]["keypoints"]),
-                len(features[j]["keypoints"]),
-            )
-        )
+    if not matrix:
+        raise ValueError("Transformation matrix is empty")
+    if not match_list:
+        raise ValueError("Match list dictionary is empty")
 
     return matrix, match_list
 
