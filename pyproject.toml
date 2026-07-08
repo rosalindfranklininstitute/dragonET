@@ -191,5 +191,5 @@ dev = [
     "types-pyyaml>=6.0.12.20260518",
 ]
 
-[mypy]
+[tool.mypy]
 ignore_missing_imports = true
