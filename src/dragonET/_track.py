@@ -7,6 +7,7 @@
 #
 from __future__ import annotations
 from collections import defaultdict
+from contextlib import nullcontext
 import typing
 
 import mrcfile  # type: ignore[import-untyped]
@@ -21,6 +22,9 @@ from skimage.transform import EuclideanTransform
 
 if typing.TYPE_CHECKING:
     from os import PathLike
+    from multiprocessing.pool import (
+        Pool as MultiprocessingPool,
+    )  # multiprocessing.Pool wasn't good for typing for some reason
 
     from numpy.typing import NDArray
 
@@ -101,7 +105,7 @@ def _detect_and_extract(
 
 
 def extract_features(
-    projections: NDArray[typing.Any], processes: int
+    projections: NDArray[typing.Any], pool: MultiprocessingPool | None = None
 ) -> list[dict[str, typing.Any]]:
     # Get the image size
     image_size = np.array(projections.shape[1:])
@@ -115,11 +119,9 @@ def extract_features(
 
     features = []
 
-    print(f"Starting feature extraction with {processes} processes...")
     # multiprocessing starmap of the detect and extract function for speed
-    if processes > 1:
-        with Pool(processes=processes) as p:
-            features = p.starmap(_detect_and_extract, projection_SIFT_pairs)
+    if pool is not None:
+        features = pool.starmap(_detect_and_extract, projection_SIFT_pairs)
     else:
         for projection, sift, image_size, i, projection_shape in projection_SIFT_pairs:
             features.append(
@@ -233,8 +235,8 @@ def _find_matching_features(
 
 def find_matching_features(
     features: list[dict[str, typing.Any]],
-    processes: int,
     min_samples: int = 4,
+    pool: MultiprocessingPool | None = None,
 ) -> tuple[NDArray[np.float64], dict[tuple[int, int], tuple[int, int]]]:
     # Initialise the transformation matrix for each image
     matrix = np.full((len(features), 3, 3), np.eye(3), dtype=np.float64)
@@ -251,9 +253,8 @@ def find_matching_features(
         targets.append((features[i], features[j], i, j, min_samples))
 
     # multiprocessing starmap of the detect and extract function for speed
-    if processes > 1:
-        with Pool(processes=processes) as p:
-            match_lists_and_transforms = p.starmap(_find_matching_features, targets)
+    if pool is not None:
+        match_lists_and_transforms = pool.starmap(_find_matching_features, targets)
     else:
         for target_i, target_j, i, j, _ in targets:
             match_lists_and_transforms.append(
@@ -415,7 +416,7 @@ def track_first_and_last(
     first_and_last_images[1] = np.flip(projections[-1], axis=1)
 
     # Extract the image features
-    features = extract_features(first_and_last_images, processes=1)
+    features = extract_features(first_and_last_images)
 
     # Find matching features and compute initial transform between images
     _, match_list = find_matching_features(features, min_samples)
@@ -508,11 +509,18 @@ def track_stack(
     rebinned_projections = rebinned_projections[angle_ordered_indexes]
     P = P[angle_ordered_indexes, ...]
 
-    # Extract the image features
-    features = extract_features(rebinned_projections, processes=processes)
+    with Pool(processes=processes) if processes else nullcontext() as pool:
+        print(
+            f"Starting feature extraction with {processes} process{'es' if processes > 1 else ''}..."
+        )
+        # Extract the image features
+        features = extract_features(rebinned_projections, pool=pool)
 
-    # Find matching features and compute initial transform between images
-    matrix, match_list = find_matching_features(features, min_samples)
+        print(
+            f"Starting feature matching with {processes} process{'es' if processes > 1 else ''}..."
+        )
+        # Find matching features and compute initial transform between images
+        matrix, match_list = find_matching_features(features, min_samples, pool=pool)
 
     # Construct data matrix. This is a FxPx2 matrix containing the coordinates
     # of all points on all frames. The mask is a FxP matrix showing whether the
