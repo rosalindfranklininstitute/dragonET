@@ -582,6 +582,7 @@ def _refine(
         ax.set_title("Angle vs image number")
         ax.legend()
         fig.savefig(os.path.join(directory, "angles_vs_image_number.png"), dpi=600)
+        plt.close(fig)
 
     def write_shift_vs_image_number(
         P: NDArray[typing.Any], directory: str | PathLike[str]
@@ -598,6 +599,7 @@ def _refine(
         ax.set_title("Shift vs image number")
         ax.legend()
         fig.savefig(os.path.join(directory, "shift_vs_image_number.png"), dpi=600)
+        plt.close(fig)
 
     def write_xy_shift_distribution(
         P: NDArray[typing.Any], directory: str | PathLike[str]
@@ -617,6 +619,7 @@ def _refine(
         ax[1].set_xlabel("Y shift")
         fig.suptitle("Distribution of X and Y shifts")
         fig.savefig(os.path.join(directory, "xy_shift_histogram.png"), dpi=600)
+        plt.close(fig)
 
     def write_plots(P: NDArray[typing.Any], directory: str | PathLike[str]) -> None:
         print("Writing plots to %s" % directory)
