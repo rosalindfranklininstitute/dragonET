@@ -414,15 +414,16 @@ These are the core programs used in the typical reconstruction workflow:
 
 **Usage:**
 ```bash
-dragonET run -p PROJECTIONS [-a ANGLES] [-r GLOBAL_ROTATION] [-f REBIN_FACTOR] [--device DEVICE]
+dragonET run -p PROJECTIONS [-a ANGLES] [-r GLOBAL_ROTATION] [-f REBIN_FACTOR] [--device DEVICE] [--processes PROCESSES]
 ```
 
 **Arguments:**
 - `-p, --projections`: The projection images (required)
 - `-a, --angles`: The angles in the rawtlt file (optional, will be generated if not provided)
-- `-r, --global_rotation`: The global in plane rotation (degrees) (default: 0)
+- `-r, --global-rotation`: The global in plane rotation (degrees) (default: 0)
 - `-f, --rebin-factor`: The rebin factor (must be a power of 2) (default: 1)
 - `--device`: The device settings to use (choices: "gpu", "gpu_and_host", "host") (default: "gpu")
+- `--processes`: Number of processes to perform tracking with (default: 1)
 
 **Details:**
 - Automates the complete workflow: data import, feature tracking, model refinement, and reconstruction
@@ -445,7 +446,7 @@ dragonET new -p PROJECTIONS -a ANGLES [-m MODEL] [-r GLOBAL_ROTATION]
 - `-p, --projections`: The projection images (required)
 - `-a, --angles`: The angles in the rawtlt file (required)
 - `-m, --model`: A YAML file describing the initial model (default: "initial_model.yaml")
-- `-r, --global_rotation`: The global in plane rotation (degrees) (default: 0)
+- `-r, --global-rotation`: The global in plane rotation (degrees) (default: 0)
 
 ### dragonET track
 
@@ -453,7 +454,7 @@ dragonET new -p PROJECTIONS -a ANGLES [-m MODEL] [-r GLOBAL_ROTATION]
 
 **Usage:**
 ```bash
-dragonET track -p PROJECTIONS --model_in MODEL_IN [--model_out MODEL_OUT] [--contours CONTOURS]
+dragonET track -p PROJECTIONS --model_in MODEL_IN [--model_out MODEL_OUT] [--contours CONTOURS] [--processes PROCESSES]
 ```
 
 **Arguments:**
@@ -461,6 +462,7 @@ dragonET track -p PROJECTIONS --model_in MODEL_IN [--model_out MODEL_OUT] [--con
 - `--model_in`: A file describing the initial model (required)
 - `--model_out`: A file describing the output model (default: "tracked_model.yaml")
 - `--contours`: A binary file describing the contours (default: "contours.npz")
+- `--processes`: Number of processes to perform tracking with (default: 1)
 
 ### dragonET align
 

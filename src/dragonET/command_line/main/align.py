@@ -27,7 +27,7 @@ def add_arguments(parser: ArgumentParser) -> None:
         required=True,
         help=(
             """
-            The filename for the projection images
+            The filename for the projection images.
             """
         ),
     )
@@ -59,28 +59,28 @@ def add_arguments(parser: ArgumentParser) -> None:
         type=int,
         default=None,
         dest="reference_image",
-        help="Set the reference image, if not set the angle closest to zero will be chosen",
+        help="Set the reference image, if not set the angle closest to zero will be chosen.",
     )
     parser.add_argument(
         "--max_shift",
         type=float,
         default=0.25,
         dest="max_shift",
-        help="Maximum normalised image shift (between 0 and 1)",
+        help="Maximum normalised image shift (between 0 and 1).",
     )
     parser.add_argument(
         "--max_iter",
         type=int,
         default=10,
         dest="max_iter",
-        help="Maximum number of iterations (> 0)",
+        help="Maximum number of iterations (> 0).",
     )
     parser.add_argument(
         "--max_images",
         type=int,
         default=3,
         dest="max_images",
-        help="Maximum number of images to use in multiple correlation (> 0)",
+        help="Maximum number of images to use in multiple correlation (> 0).",
     )
     parser.add_argument(
         "--device",
@@ -88,7 +88,7 @@ def add_arguments(parser: ArgumentParser) -> None:
         choices=["gpu", "cpu"],
         default="gpu",
         dest="device",
-        help="The device settings to use",
+        help="The device settings to use.",
     )
 
 
