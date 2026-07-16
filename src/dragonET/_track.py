@@ -8,6 +8,7 @@
 from __future__ import annotations
 from collections import defaultdict
 from contextlib import nullcontext
+from traceback import print_exception
 import typing
 
 import mrcfile  # type: ignore[import-untyped]
@@ -141,7 +142,7 @@ def _find_matching_features(
     min_samples: int,
 ) -> tuple[
     dict[tuple[int, int], tuple[int, typing.Any]],
-    EuclideanTransform,
+    EuclideanTransform | None,
 ]:
 
     # Initialise the dict of matches
@@ -188,7 +189,7 @@ def _find_matching_features(
 
     # Only bother if we have enough samples
     try:
-        assert len(positions_i) >= min_samples
+        assert len(positions_i) >= min_samples, "Not enough features"
 
         # Compute the Euclidean transform
         transform, inliers = ransac(
@@ -215,8 +216,10 @@ def _find_matching_features(
 
         # matrix must be updated out of the loop,
         # but this should be not a significant slowdown
-    except Exception:
+    except Exception as e:
+        print_exception(e)
         inliers = np.zeros(positions_i.shape[0], dtype=bool)
+        transform = None
 
     print(
         "Matched images (%d, %d): fitted %d points out of %d matches from (%d, %d) features"
@@ -267,10 +270,15 @@ def find_matching_features(
     for i, j in enumerate(range(1, len(match_lists_and_transforms) + 1), 0):
         # append the first set of matches to the match_list
         match_list.update(match_lists_and_transforms[i][0])
-        # functionally, j - 1 == i, but this may change with different update schemes
-        matrix[j] = match_lists_and_transforms[i][1].params @ matrix[i]
+        transform = match_lists_and_transforms[i][1]
+        if transform is None:
+            print(f"Failed to find features between tilts {i} and {j}")
+            matrix[j] = matrix[i]
+        else:
+            # functionally, j - 1 == i, but this may change with different update schemes
+            matrix[j] = transform.params @ matrix[i]
 
-    if not matrix:
+    if not matrix.any():
         raise ValueError("Transformation matrix is empty")
     if not match_list:
         raise ValueError("Match list dictionary is empty")
