@@ -221,17 +221,19 @@ def _find_matching_features(
         inliers = np.zeros(positions_i.shape[0], dtype=bool)
         transform = None
 
-    print(
-        "Matched images (%d, %d): fitted %d points out of %d matches from (%d, %d) features"
-        % (
-            i + 1,
-            j + 1,
-            np.count_nonzero(inliers),
-            matches.shape[0],
-            len(features_i["keypoints"]),
-            len(features_j["keypoints"]),
+    with print_lock:
+        print(
+            "Matched images (%d, %d): fitted %d points out of %d matches from (%d, %d) features"
+            % (
+                i + 1,
+                j + 1,
+                np.count_nonzero(inliers),
+                matches.shape[0],
+                len(features_i["keypoints"]),
+                len(features_j["keypoints"]),
+            ),
+            flush=True,
         )
-    )
 
     return match_list, transform  # type: ignore
 
@@ -519,13 +521,15 @@ def track_stack(
 
     with Pool(processes=processes) if processes else nullcontext() as pool:
         print(
-            f"Starting feature extraction with {processes} process{'es' if processes > 1 else ''}..."
+            f"Starting feature extraction with {processes} process{'es' if processes > 1 else ''}...",
+            flush=True,
         )
         # Extract the image features
         features = extract_features(rebinned_projections, pool=pool)
 
         print(
-            f"Starting feature matching with {processes} process{'es' if processes > 1 else ''}..."
+            f"Starting feature matching with {processes} process{'es' if processes > 1 else ''}...",
+            flush=True,
         )
         # Find matching features and compute initial transform between images
         matrix, match_list = find_matching_features(features, min_samples, pool=pool)
