@@ -542,9 +542,12 @@ def track_stack(
 
     # Try to track features across the end of the scan
     if len(P) > 2 and angular_difference_180(P[0, 4], P[-1, 4]) < 10:
-        data, mask, octave = track_first_and_last(
-            rebinned_projections, data, mask, octave, min_samples
-        )
+        try:
+            data, mask, octave = track_first_and_last(
+                rebinned_projections, data, mask, octave, min_samples
+            )
+        except ValueError as e:
+            print(f"WARNING: Failed to track first and last images: {e}")
 
     # Recentre the points around the origin. This calculates the optimal matrix
     # that puts the points around the origin on each image.
