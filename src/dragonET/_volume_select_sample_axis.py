@@ -6,21 +6,21 @@
 # Author: James Parkhurst
 #
 from __future__ import annotations
+
 import typing
-import yaml
 
 import mrcfile  # type: ignore[import-untyped]
-import numpy as np
-
 import napari
 import napari.layers
+import numpy as np
+import yaml
 
 if typing.TYPE_CHECKING:
     from collections.abc import Iterable
     from os import PathLike
 
-    from numpy.typing import NDArray
     from mrcfile.mrcmemmap import MrcMemmap
+    from numpy.typing import NDArray
 
 
 def _volume_select_sample_axis(

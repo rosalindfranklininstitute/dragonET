@@ -6,11 +6,12 @@
 # Author: James Parkhurst
 #
 from __future__ import annotations
+
 import typing
 
 import mrcfile  # type: ignore[import-untyped]
-from mrcfile.utils import mode_from_dtype
 import numpy as np
+from mrcfile.utils import mode_from_dtype
 
 if typing.TYPE_CHECKING:
     from os import PathLike

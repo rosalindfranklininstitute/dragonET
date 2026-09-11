@@ -6,6 +6,7 @@
 # Author: James Parkhurst
 #
 from __future__ import annotations
+
 import typing
 
 import mrcfile  # type: ignore[import-untyped]

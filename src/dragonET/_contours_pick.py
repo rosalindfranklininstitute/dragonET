@@ -6,24 +6,23 @@
 # Author: James Parkhurst
 #
 from __future__ import annotations
+
 import typing
-import yaml
 
 import mrcfile  # type: ignore[import-untyped]
-import numpy as np
-from scipy.spatial.transform import Rotation
-
 import napari
 import napari.layers
+import numpy as np
+import yaml
+from scipy.spatial.transform import Rotation
 
 from dragonET import _stack_transform
 
 if typing.TYPE_CHECKING:
     from os import PathLike
 
-    from numpy.typing import NDArray
-
     from napari.viewer import Viewer
+    from numpy.typing import NDArray
 
 
 def _contours_pick(

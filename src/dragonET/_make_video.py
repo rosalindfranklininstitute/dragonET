@@ -6,9 +6,10 @@
 # Author: James Parkhurst
 #
 from __future__ import annotations
-import imageio
+
 import typing
 
+import imageio
 import mrcfile  # type: ignore[import-untyped]
 import numpy as np
 

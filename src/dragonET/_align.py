@@ -6,13 +6,14 @@
 # Author: James Parkhurst
 #
 from __future__ import annotations
+
 import typing
-import yaml
 
 import mrcfile  # type: ignore[import-untyped]
 import numpy as np
 import scipy
 import torch
+import yaml
 
 if typing.TYPE_CHECKING:
     from collections.abc import Sequence

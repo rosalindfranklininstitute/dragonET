@@ -5,13 +5,13 @@
 #
 # Author: James Parkhurst
 from __future__ import annotations
+
 import typing
-import yaml
 
 import mrcfile  # type: ignore[import-untyped]
 import numpy as np
 import scipy.ndimage
-
+import yaml
 from scipy.spatial.transform import Rotation
 
 from dragonET import _contours_triangulate, _stack_predict

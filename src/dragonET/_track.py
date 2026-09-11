@@ -6,26 +6,26 @@
 # Author: James Parkhurst
 #
 from __future__ import annotations
+
+import typing
 from collections import defaultdict
 from contextlib import nullcontext
+from multiprocessing import Lock, Pool
 from traceback import print_exception
-import typing
 
 import mrcfile  # type: ignore[import-untyped]
 import numpy as np
 import yaml
-
-from multiprocessing import Pool, Lock
 from scipy.spatial.transform import Rotation
 from skimage.feature import SIFT, match_descriptors  # , plot_matches
 from skimage.measure import ransac
 from skimage.transform import EuclideanTransform
 
 if typing.TYPE_CHECKING:
-    from os import PathLike
     from multiprocessing.pool import (
         Pool as MultiprocessingPool,
     )  # multiprocessing.Pool wasn't good for typing for some reason
+    from os import PathLike
 
     from numpy.typing import NDArray
 

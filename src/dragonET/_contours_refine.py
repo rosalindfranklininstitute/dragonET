@@ -5,15 +5,15 @@
 # Author: James Parkhurst
 #
 from __future__ import annotations
+
 import typing
-import yaml
 
 import mrcfile  # type: ignore[import-untyped]
 import numpy as np
 import scipy.ndimage
-
-from scipy.spatial.transform import Rotation
+import yaml
 from scipy.signal.windows import gaussian
+from scipy.spatial.transform import Rotation
 from skimage.measure import ransac
 from skimage.transform import EuclideanTransform
 

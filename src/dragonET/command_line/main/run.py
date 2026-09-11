@@ -6,6 +6,7 @@
 # Author: James Parkhurst
 #
 from __future__ import annotations
+
 import time
 import typing
 

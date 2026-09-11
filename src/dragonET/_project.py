@@ -6,18 +6,19 @@
 # Author: James Parkhurst
 #
 from __future__ import annotations
+
 import typing
-import yaml
 
 import astra  # type: ignore[import-untyped]
 import mrcfile  # type: ignore[import-untyped]
 import numpy as np
+import yaml
 from scipy.spatial.transform import Rotation
 
 if typing.TYPE_CHECKING:
     from os import PathLike
 
-    from numpy.typing import NDArray, ArrayLike
+    from numpy.typing import ArrayLike, NDArray
 
     SupportedDevices = typing.Literal["gpu", "gpu_and_host"]
 

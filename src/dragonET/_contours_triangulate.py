@@ -6,10 +6,11 @@
 # Author: James Parkhurst
 #
 from __future__ import annotations
+
 import typing
-import yaml
 
 import numpy as np
+import yaml
 from scipy.spatial.transform import Rotation
 
 if typing.TYPE_CHECKING:

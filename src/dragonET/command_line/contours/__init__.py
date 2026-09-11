@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import typing
 
 from dragonET.command_line.contours import extend, pick, refine, triangulate

@@ -6,14 +6,15 @@
 # Author: James Parkhurst
 #
 from __future__ import annotations
+
 import os
 import typing
-import yaml
 
-import numpy as np
-import scipy.optimize
 import matplotlib
 import matplotlib.pyplot as plt
+import numpy as np
+import scipy.optimize
+import yaml
 from scipy.spatial.transform import Rotation
 
 matplotlib.use("Agg")
