@@ -23,7 +23,7 @@ if typing.TYPE_CHECKING:
 
 def _run(
     projections_filename: str | PathLike[str],
-    angles_filename: str | PathLike[str],
+    angles_filename: str | PathLike[str] | None,
     global_rotation: float = 0,
     rebin_factor: int = 1,
     device: str = "gpu",
