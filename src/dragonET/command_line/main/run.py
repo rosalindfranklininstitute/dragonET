@@ -43,6 +43,14 @@ def add_arguments(parser: ArgumentParser) -> None:
         ),
     )
     parser.add_argument(
+        "-o",
+        "--output-directory",
+        type=str,
+        dest="output_directory",
+        required=True,
+        help="The directory where the processed files will be saved.",
+    )
+    parser.add_argument(
         "-a",
         "--angles",
         type=str,
@@ -94,7 +102,6 @@ def add_arguments(parser: ArgumentParser) -> None:
         ),
     )
 
-
 def run(namespace: Namespace) -> None:
     """
     Run the automated pipeline
@@ -108,6 +115,7 @@ def run(namespace: Namespace) -> None:
     # Do the work
     _run(
         namespace.projections,
+        namespace.output_directory,
         namespace.angles,
         namespace.global_rotation,
         namespace.rebin_factor,

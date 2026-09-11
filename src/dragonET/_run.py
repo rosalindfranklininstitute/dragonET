@@ -8,6 +8,7 @@
 from __future__ import annotations
 import os
 import typing
+from pathlib import Path
 
 from dragonET._new import _new
 from dragonET._track import _track
@@ -23,6 +24,7 @@ if typing.TYPE_CHECKING:
 
 def _run(
     projections_filename: str | PathLike[str],
+    output_directory: str | PathLike[str],
     angles_filename: str | PathLike[str] | None = None,
     global_rotation: float = 0,
     rebin_factor: int = 1,
@@ -40,29 +42,34 @@ def _run(
     # Check rebin factor
     assert is_power_of_2(rebin_factor)
 
+    output_directory = Path(output_directory)
+    output_directory.mkdir(exist_ok=True)
+
     # Set up some filenames
-    initial_model_filename = os.path.join("output", "initial_model.yaml")
-    tracked_model_filename = os.path.join("output", "tracked_model.yaml")
-    tracked_contours_filename = os.path.join("output", "tracked_contours.npz")
-    refined_model_fix_bc_filename = os.path.join("output", "refined_model_fix_bc.yaml")
-    refined_model_fix_c_filename = os.path.join("output", "refined_model_fix_c.yaml")
-    rebinned_projections_filename = os.path.join("output", "rebinned_projections.mrc")
-    aligned_projections_tracked_filename = os.path.join(
-        "output", "aligned_projections_tracked.mrc"
+    initial_model_filename = output_directory / "initial_model.yaml"
+    tracked_model_filename = output_directory / "tracked_model.yaml"
+    tracked_contours_filename = output_directory / "tracked_contours.npz"
+    refined_model_fix_bc_filename = output_directory / "refined_model_fix_bc.yaml"
+    refined_model_fix_c_filename = output_directory / "refined_model_fix_c.yaml"
+    rebinned_projections_filename = output_directory / "rebinned_projections.mrc"
+    aligned_projections_tracked_filename = (
+        output_directory / "aligned_projections_tracked.mrc"
     )
-    aligned_projections_fix_bc_filename = os.path.join(
-        "output", "aligned_projections_fix_bc.mrc"
+
+    aligned_projections_fix_bc_filename = (
+        output_directory / "aligned_projections_fix_bc.mrc"
     )
-    aligned_projections_fix_c_filename = os.path.join(
-        "output", "aligned_projections_fix_c.mrc"
+
+    aligned_projections_fix_c_filename = (
+        output_directory / "aligned_projections_fix_c.mrc"
     )
-    volume_fix_bc_filename = os.path.join("output", "volume_fix_bc.mrc")
-    volume_fix_c_filename = os.path.join("output", "volume_fix_c.mrc")
+    volume_fix_bc_filename = output_directory / "volume_fix_bc.mrc"
+    volume_fix_c_filename = output_directory / "volume_fix_c.mrc"
 
     # If no angles are specified
     if angles_filename is None or not os.path.exists(angles_filename):
         # Set the angles filename
-        angles_filename = os.path.join("output", "angles.rawtlt")
+        angles_filename = output_directory / "angles.rawtlt"
 
         # And generate some new angles
         _generate_angles(projections_filename, angles_filename)
