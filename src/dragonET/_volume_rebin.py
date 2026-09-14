@@ -36,16 +36,7 @@ def downsample_volume(data: NDArray[typing.Any], factor: int) -> NDArray[np.floa
     # Downsample the volume
     shape = np.asarray(data.shape) // np.asarray([factor, factor, factor])
     print(
-        "Rebinning volume by factor %d from (%d, %d, %d) -> (%d, %d, %d)"
-        % (
-            factor,
-            data.shape[0],
-            data.shape[1],
-            data.shape[2],
-            shape[0],
-            shape[1],
-            shape[2],
-        )
+        f"Rebinning volume by factor {factor:d} from ({data.shape[0]:d}, {data.shape[1]:d}, {data.shape[2]:d}) -> ({shape[0]:d}, {shape[1]:d}, {shape[2]:d})"
     )
     shape = (
         shape[0],
@@ -79,16 +70,7 @@ def upsample_volume(data: NDArray[_ArrayT], factor: int) -> NDArray[_ArrayT]:
     # Upsample the volume
     shape = np.array(data.shape) * np.array([factor, factor, factor])
     print(
-        "Rebinning volume by factor %d from (%d, %d, %d) -> (%d, %d, %d)"
-        % (
-            factor,
-            data.shape[0],
-            data.shape[1],
-            data.shape[2],
-            shape[0],
-            shape[1],
-            shape[2],
-        )
+        f"Rebinning volume by factor {factor:d} from ({data.shape[0]:d}, {data.shape[1]:d}, {data.shape[2]:d}) -> ({shape[0]:d}, {shape[1]:d}, {shape[2]:d})"
     )
     data = np.zeros_like(data, shape=shape)
     for k in range(factor):
@@ -125,7 +107,7 @@ def _volume_rebin(
     """
 
     def read_volume(filename: str | PathLike[str]) -> NDArray[typing.Any]:
-        print("Reading volume from %s" % filename)
+        print(f"Reading volume from {filename}")
         data = mrcfile.mmap(filename).data
         if data is None:
             raise ValueError(f"No data in {filename}")
@@ -134,7 +116,7 @@ def _volume_rebin(
     def write_volume(
         volume: NDArray[typing.Any], filename: str | PathLike[str]
     ) -> None:
-        print("Writing volume to %s" % filename)
+        print(f"Writing volume to {filename}")
         handle = mrcfile.new_mmap(
             filename,
             volume.shape,

@@ -57,14 +57,14 @@ def _refine_model(
     mask = mask[:, select]
     data = data[:, select]
 
-    dx, dy, a, b, c, rmsd = _refine.refine_model(
+    dx, dy, a, b, c, _ = _refine.refine_model(
         dx, dy, a, b, c, data, mask, active=active
     )
 
     active[3, :] = 1  # b
     active[3, idx] = 0  # b
 
-    dx, dy, a, b, c, rmsd = _refine.refine_model(
+    dx, dy, a, b, c, _ = _refine.refine_model(
         dx, dy, a, b, c, data, mask, active=active
     )
 
@@ -135,7 +135,7 @@ def _predict_image(
             axis=0,
         )
 
-    I = _transform_stack(projections, P, P_image)  # noqa: E741
+    I = _transform_stack(projections, P, P_image)
     M = _transform_stack(np.ones_like(projections), P, P_image)
     M = np.isclose(M, 1, atol=0.1)
     return I, M
@@ -338,14 +338,7 @@ def _propagate(
     threshold = np.clip(Q1 - 1.5 * IQR, *threshold_limits)
     mask_observed = cc > 0.5  # threshold
     print(
-        "Tracked %d / %d features with cc > %.2f and average shift of (%.1f, %.1f)"
-        % (
-            np.count_nonzero(mask_observed),
-            mask_observed.size,
-            threshold,
-            np.mean(Vx),
-            np.mean(Vy),
-        )
+        f"Tracked {np.count_nonzero(mask_observed):d} / {mask_observed.size:d} features with cc > {threshold:.2f} and average shift of ({np.mean(Vx):.1f}, {np.mean(Vy):.1f})"
     )
 
     # Return the data and mask
@@ -374,17 +367,10 @@ def _validate(
 
     transform = typing.cast(EuclideanTransform, transform)
     if not isinstance(inliers, list):
-        raise ValueError("Failed to get inliers")
+        raise TypeError("Failed to get inliers")
 
     print(
-        "Selecting %d/%d points as inliers with rotation of %.2f (deg) and x/y translation of (%.2f, %.2f)"
-        % (
-            np.count_nonzero(inliers),
-            len(inliers),
-            np.degrees(transform.rotation),
-            transform.translation[0] * image_size[1],
-            transform.translation[1] * image_size[0],
-        )
+        f"Selecting {np.count_nonzero(inliers)}/{len(inliers)} points as inliers with rotation of {np.degrees(transform.rotation):.2f} (deg) and x/y translation of ({transform.translation[0] * image_size[1]:.2f}, {transform.translation[1] * image_size[0]:.2f})"
     )
 
     indices = np.where(mask)[0][inliers]
@@ -436,8 +422,7 @@ def _refine_contours(
 
         # Print some information
         print(
-            "Aligning image %d (%.1f deg) to image %d (%.1f deg)"
-            % (index, P[index, 4], reference, P[reference, 4])
+            f"Aligning image {index:d} ({P[index, 4]:.1f} deg) to image {reference:d} ({P[reference, 4]:.1f} deg)"
         )
 
         # Get the current image
@@ -527,7 +512,7 @@ def _contours_refine(
     """
 
     def read_projections(filename: str | PathLike[str]) -> NDArray[typing.Any]:
-        print("Reading projections from %s" % filename)
+        print(f"Reading projections from {filename}")
         data = mrcfile.mmap(filename).data
         if data is None:
             raise ValueError(f"No data in {filename}")
@@ -536,12 +521,12 @@ def _contours_refine(
     def read_points(
         filename: str | PathLike[str],
     ) -> tuple[NDArray[typing.Any], NDArray[typing.Any], NDArray[typing.Any]]:
-        print("Reading points from %s" % filename)
+        print(f"Reading points from {filename}")
         handle = np.load(filename)
         return handle["data"], handle["mask"], handle["octave"]
 
     def read_model(filename: str | PathLike[str]) -> typing.Any:
-        print("Reading model from %s" % filename)
+        print(f"Reading model from {filename}")
         return yaml.safe_load(open(filename, "r"))
 
     def write_points(
@@ -550,12 +535,14 @@ def _contours_refine(
         mask: NDArray[np.bool_],
         octave: NDArray[np.int64],
     ) -> None:
-        print("Writing contours to %s" % filename)
-        np.savez(open(filename, "wb"), data=data, mask=mask, octave=octave)
+        print(f"Writing contours to {filename}")
+        with open(filename, "wb") as f:
+            np.savez(f, data=data, mask=mask, octave=octave)
 
     def write_model(model: typing.Any, filename: str | PathLike[str]) -> None:
-        print("Writing model to %s" % filename)
-        yaml.safe_dump(model, open(filename, "w"), default_flow_style=None)
+        print(f"Writing model to {filename}")
+        with open(filename, "w") as f:
+            yaml.safe_dump(model, f, default_flow_style=None)
 
     # Check the input
     assert num_macro_cycles >= 1

@@ -37,22 +37,23 @@ def _contours_pick(
     """
 
     def read_projections(filename: str | PathLike[str]) -> NDArray[typing.Any]:
-        print("Reading projections from %s" % filename)
+        print(f"Reading projections from {filename}")
         data = mrcfile.mmap(filename).data
         if data is None:
             raise ValueError(f"No data in {filename}")
         return data
 
     def read_contours(filename: str | PathLike[str]) -> typing.Any:
-        print("Reading contours from %s" % filename)
+        print(f"Reading contours from {filename}")
         return np.load(filename)
 
     def read_model(filename: str | PathLike[str]) -> typing.Any:
-        print("Reading model from %s" % filename)
-        return yaml.safe_load(open(filename))
+        print(f"Reading model from {filename}")
+        with open(filename) as f:
+            return yaml.safe_load(f)
 
     def write_contours(filename: str | PathLike[str], contours) -> None:
-        print("Writing contours to %s" % filename)
+        print(f"Writing contours to {filename}")
         np.savez(
             filename,
             data=contours["data"],
@@ -74,7 +75,7 @@ def _contours_pick(
             data = contours["data"]
             mask = contours["mask"]
             for index in range(data.shape[1]):
-                print("Adding contour for point %d" % index)
+                print(f"Adding contour for point {index:d}")
                 m = mask[:, index]
                 z = np.where(m)[0]
                 x, y = data[m, index, :].T
@@ -83,7 +84,7 @@ def _contours_pick(
                 c = np.stack([x, y, np.ones_like(x)]).T
                 x, y, _ = (transform[z] @ c[:, :, None])[:, :, 0].T
                 points = np.stack([z, y, x]).T
-                name = "Points [%d]" % index if index > 0 else "Points"
+                name = f"Points [{index if index > 0 else 'Points'}]"
                 viewer.add_points(points, name=name, face_color="blue", size=5)
 
     def get_contours(
@@ -105,14 +106,13 @@ def _contours_pick(
                 if points.shape[0] == 0:
                     print("- Warning: skipping contour with no points")
                 else:
-                    print("Contour %d has %d points" % (index, points.shape[0]))
+                    print(f"Contour {index:d} has {points.shape[0]:d} points")
                     points = np.array(sorted(points.tolist(), key=lambda x: x[0]))
                     if points.shape[0] == 1:
-                        print("- Warning: contour %d has only 1 point" % index)
+                        print(f"- Warning: contour {index:d} has only 1 point")
                     if len(points[:, 0]) != len(set(points[:, 0])):
                         print(
-                            "- Warning: Contour %d has more than 1 point per image, selecting one point"
-                            % index
+                            f"- Warning: Contour {index:d} has more than 1 point per image, selecting one point"
                         )
                     data = np.zeros((transform.shape[0], 2), dtype=np.float64)
                     mask = np.zeros(transform.shape[0], dtype=np.bool_)

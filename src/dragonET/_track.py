@@ -51,8 +51,7 @@ def rebin_stack(data: NDArray[typing.Any], factor: int) -> NDArray[typing.Any]:
     if factor > 1:
         shape = np.array(data.shape) // np.array([1, factor, factor])
         print(
-            "Rebinning stack by factor %d from (%d, %d) -> (%d, %d)"
-            % (factor, data.shape[1], data.shape[2], shape[1], shape[2])
+            f"Rebinning stack by factor {factor:d} from ({data.shape[1]:d}, {data.shape[2]:d}) -> ({shape[1]:d}, {shape[2]:d})"
         )
         shape = (
             shape[0],
@@ -97,8 +96,7 @@ def _detect_and_extract(
     with print_lock:
         # it's not projection.shape[0]
         print(
-            "Extracted %d features from image %d / %d"
-            % (len(descriptor_extractor.positions), i + 1, counter),
+            f"Extracted {len(descriptor_extractor.positions)}:d features from image {i + 1:d} / {counter:d}",
             flush=True,
         )
 
@@ -201,9 +199,9 @@ def _find_matching_features(
         )
 
         if not isinstance(transform, EuclideanTransform):
-            raise ValueError("Failed to get transform")
+            raise TypeError("Failed to get transform")
         elif not isinstance(inliers, list):
-            raise ValueError("Failed to get inliers")
+            raise TypeError("Failed to get inliers")
 
         # Check the number of inliers
         assert np.count_nonzero(inliers) >= min_samples
@@ -216,22 +214,14 @@ def _find_matching_features(
 
         # matrix must be updated out of the loop,
         # but this should be not a significant slowdown
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print_exception(e)
         inliers = np.zeros(positions_i.shape[0], dtype=bool)
         transform = None
 
     with print_lock:
         print(
-            "Matched images (%d, %d): fitted %d points out of %d matches from (%d, %d) features"
-            % (
-                i + 1,
-                j + 1,
-                np.count_nonzero(inliers),
-                matches.shape[0],
-                len(features_i["keypoints"]),
-                len(features_j["keypoints"]),
-            ),
+            f"Matched images ({i + 1:d}, {j + 1:d}): fitted {np.count_nonzero(inliers):d} points out of {matches.shape[0]:d} matches from ({len(features_i['keypoints']):d}, {len(features_j['keypoints']):d}) features",
             flush=True,
         )
 
@@ -435,7 +425,7 @@ def track_first_and_last(
         raise ValueError("Failed to find matches between first and last images")
 
     # Creat th new data matrix
-    data2, mask2, octave2 = construct_data_matrix(features, match_list)
+    data2, _, octave2 = construct_data_matrix(features, match_list)
 
     # Loop through all the found features
     for j in range(data2.shape[1]):
@@ -470,8 +460,7 @@ def track_first_and_last(
 
     # Count how many we have set
     print(
-        "Matched %d features on first and last image"
-        % (np.count_nonzero(mask[0, :] & mask[-1, :]))
+        f"Matched {np.count_nonzero(mask[0, :] & mask[-1, :]):d} features on first and last image"
     )
 
     # Return the data matrix, mask and octave data
@@ -575,19 +564,20 @@ def _track(
     """
 
     def read_projections(filename: str | PathLike[str]) -> NDArray[typing.Any]:
-        print("Reading projections from %s" % filename)
+        print(f"Reading projections from {filename}")
         data = mrcfile.mmap(filename).data
         if data is None:
             raise ValueError(f"No data in {filename}")
         return data
 
     def read_model(filename: str | PathLike[str]) -> dict:
-        print("Reading model from %s" % filename)
+        print(f"Reading model from {filename}")
         return yaml.safe_load(open(filename, "r"))
 
     def write_model(model, filename: str | PathLike[str]) -> None:
-        print("Writing model to %s" % filename)
-        yaml.safe_dump(model, open(filename, "w"), default_flow_style=None)
+        print(f"Writing model to {filename}")
+        with open(filename, "w") as f:
+            yaml.safe_dump(model, f, default_flow_style=None)
 
     def write_contours(
         filename: str | PathLike[str],
@@ -595,8 +585,9 @@ def _track(
         mask: NDArray[np.bool_],
         octave: NDArray[np.int64],
     ) -> None:
-        print("Writing contours to %s" % filename)
-        np.savez(open(filename, "wb"), data=data, mask=mask, octave=octave)
+        print(f"Writing contours to {filename}")
+        with open(filename, "wb") as f:
+            np.savez(f, data=data, mask=mask, octave=octave)
 
     # Set random seed
     np.random.seed(0)

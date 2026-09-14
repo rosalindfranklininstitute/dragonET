@@ -34,16 +34,17 @@ def _volume_select_sample_axis(
     """
 
     def read_volume(filename: str | PathLike[str]) -> MrcMemmap:
-        print("Reading volume from %s" % filename)
+        print(f"Reading volume from {filename}")
         return mrcfile.mmap(filename)
 
     def read_model(filename: str | PathLike[str]):
-        print("Reading model from %s" % filename)
+        print(f"Reading model from {filename}")
         return yaml.safe_load(open(filename))
 
     def write_model(filename: str | PathLike[str], model) -> None:
-        print("Writing model to %s" % filename)
-        yaml.safe_dump(model, open(filename, "w"), default_flow_style=None)
+        print(f"Writing model to {filename}")
+        with open(filename, "w") as f:
+            yaml.safe_dump(model, f, default_flow_style=None)
 
     def normalise(v):
         n = np.linalg.norm(v)
@@ -66,8 +67,8 @@ def _volume_select_sample_axis(
                 else:
                     p1 = points[0, :]
                     p2 = points[1, :]
-                    print("Point 1: %f, %f, %f" % tuple(p1))
-                    print("Point 2: %f, %f, %f" % tuple(p2))
+                    print(f"Point 1: {p1[0]:f}, {p1[1]:f}, {p1[2]:f}")
+                    print(f"Point 2: {p2[0]:f}, {p2[1]:f}, {p2[2]:f}")
                     p1 = p1 - np.array(data.shape) / 2
                     p2 = p2 - np.array(data.shape) / 2
                     break
@@ -108,8 +109,8 @@ def _volume_select_sample_axis(
     axis, axis_origin = compute_axis_and_origin(
         get_points(viewer.layers, volume_data), np.asarray(volume_data.shape)
     )
-    print("Axis: %f, %f, %f" % tuple(axis))
-    print("Axis origin: %f, %f, %f" % tuple(axis_origin))
+    print(f"Axis: {axis[0]:f}, {axis[1]:f}, {axis[2]:f}")
+    print(f"Axis origin: {axis_origin[0]:f}, {axis_origin[1]:f}, {axis_origin[2]:f}")
 
     # Set the axis
     model["axis"] = axis.tolist()

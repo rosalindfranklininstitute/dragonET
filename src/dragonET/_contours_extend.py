@@ -145,14 +145,7 @@ def extend_contours_for_image(
     threshold = min(max_threshold, (Q1 - 1.5 * IQR))
     mask_image[0, select] = cc > threshold
     print(
-        "Tracked %d / %d features with cc > %.2f and average shift of (%.1f, %.1f)"
-        % (
-            np.count_nonzero(mask_image),
-            np.count_nonzero(select),
-            threshold,
-            np.mean(Vx),
-            np.mean(Vy),
-        )
+        f"Tracked {np.count_nonzero(mask_image):d} / {np.count_nonzero(select):d} features with cc > {threshold:.2f} and average shift of ({np.mean(Vx):.1f}, {np.mean(Vy):.1f})"
     )
 
     # Return the data and mask
@@ -196,8 +189,7 @@ def extend_contours_internal(
         ):
             if i0 >= 0 and i1 <= data.shape[0]:
                 print(
-                    "Extending contours onto image %d from images %d to %d"
-                    % (j, i0, i1)
+                    f"Extending contours onto image {j:d} from images {i0:d} to {i1:d}"
                 )
                 data[j], mask[j] = extend_contours_for_image(
                     projections[i0:i1],
@@ -227,7 +219,7 @@ def _contours_extend(
     """
 
     def read_projections(filename: str | PathLike[str]) -> NDArray[typing.Any]:
-        print("Reading projections from %s" % filename)
+        print(f"Reading projections from {filename}")
         data = mrcfile.mmap(filename).data
         if data is None:
             raise ValueError(f"No data in {filename}")
@@ -236,13 +228,14 @@ def _contours_extend(
     def read_points(
         filename: str | PathLike[str],
     ) -> tuple[NDArray[typing.Any], NDArray[np.bool_], NDArray[np.int64]]:
-        print("Reading points from %s" % filename)
+        print(f"Reading points from {filename}")
         handle = np.load(filename)
         return handle["data"], handle["mask"], handle["octave"]
 
     def read_model(filename: str | PathLike[str]) -> dict:
-        print("Reading model from %s" % filename)
-        return yaml.safe_load(open(filename, "r"))
+        print(f"Reading model from {filename}")
+        with open(filename, "r") as f:
+            return yaml.safe_load(f)
 
     def write_points(
         filename: str | PathLike[str],
@@ -250,8 +243,9 @@ def _contours_extend(
         mask: NDArray[np.bool_],
         octave: NDArray[np.int64],
     ) -> None:
-        print("Writing contours to %s" % filename)
-        np.savez(open(filename, "wb"), data=data, mask=mask, octave=octave)
+        print(f"Writing contours to {filename}")
+        with open(filename, "wb") as f:
+            np.savez(f, data=data, mask=mask, octave=octave)
 
     # Read the projections
     projections = read_projections(projections_in)

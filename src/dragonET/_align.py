@@ -156,7 +156,7 @@ def align_stack(
         # Init FFTs, filter, do initial shift, and do the whole thing in Fourier space
         fft_data = torch.zeros(data.shape, dtype=torch.complex64)
         for j in range(fft_data.shape[0]):
-            print(" Loading image %d/%d" % (j + 1, fft_data.shape[0]))
+            print(f" Loading image {j + 1:d}/{fft_data.shape[0]:d}")
             fft_data[j] = fourier_shift_image(
                 torch.fft.fft2(
                     normalise(
@@ -203,7 +203,7 @@ def align_stack(
 
     # Print some details
     algorithm = "multiple correlation"
-    print("Running %s alignment using %s" % (algorithm, str(torch_device)))
+    print(f"Running {algorithm} alignment using {torch_device!s}")
 
     # Save the original parameters
     shifts_orig = shifts.copy()
@@ -212,14 +212,14 @@ def align_stack(
     fft_data = initialise(data, shifts, torch_device)
 
     # Generate the index ordering
-    order = list(sorted(range(len(angles)), key=lambda x: abs(angles[x])))
+    order = sorted(range(len(angles)), key=lambda x: abs(angles[x]))
 
     # Don't align the zero tilt image
     zero = order[0]
     order = order[1:]
 
     # Create the coefficients tensor
-    num_images, ysize, xsize = data.shape
+    _, ysize, xsize = data.shape
 
     # Get the max shift in pixels
     max_shift_px = max_shift * np.sqrt(ysize**2 + xsize**2)
@@ -266,7 +266,7 @@ def align_stack(
         for it in range(max_iter):
             # Apply the real space weights to the target data
             # Align the image with the stack
-            I, shift = align_single(  # noqa: E741
+            _, shift = align_single(
                 fft_data_stack, apply_weights(fft_data[tar_index].to(torch_device))
             )
 
@@ -276,13 +276,7 @@ def align_stack(
                 shift = shift * max_shift_px / r
             shifts[tar_index] += shift
             print(
-                " Aligning image %d (%.1f deg): shift y = %.1f; shift x = %.1f"
-                % (
-                    tar_index + 1,
-                    angles[tar_index],
-                    shifts[tar_index, 0],
-                    shifts[tar_index, 1],
-                )
+                f" Aligning image {tar_index + 1:d} ({angles[tar_index]:.1f} deg): shift y = {shifts[tar_index, 0]:.1f}; shift x = {shifts[tar_index, 1]:.1f}"
             )
 
             # Transform the image for the next iteration
@@ -304,7 +298,7 @@ def align_stack(
     err = np.sqrt(np.sum((shifts - shifts_orig) ** 2) / len(order))
 
     # Print some info
-    print(" Finished alignment; RMS shift: %.4g" % err)
+    print(f" Finished alignment; RMS shift: {err:.4g}")
 
     # Return the parameters
     return shifts
@@ -326,19 +320,20 @@ def _align(
     """
 
     def read_projections(filename: str | PathLike[str]) -> NDArray[typing.Any]:
-        print("Reading projections from %s" % filename)
+        print(f"Reading projections from {filename}")
         data = mrcfile.mmap(filename).data
         if data is None:
             raise ValueError(f"No data in {filename}")
         return data
 
     def read_model(filename: str | PathLike[str]) -> dict:
-        print("Reading model from %s" % filename)
+        print(f"Reading model from {filename}")
         return yaml.safe_load(open(filename, "r"))
 
     def write_model(model, filename: str | PathLike[str]) -> None:
-        print("Writing model to %s" % filename)
-        yaml.safe_dump(model, open(filename, "w"), default_flow_style=None)
+        print(f"Writing model to {filename}")
+        with open(filename, "w") as f:
+            yaml.safe_dump(model, f, default_flow_style=None)
 
     # Read the projections
     projections = read_projections(projections_in)
