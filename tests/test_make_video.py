@@ -1,7 +1,9 @@
-from dragonET._make_video import _make_video
-import numpy as np
-import mrcfile  # type: ignore[import-untyped]
 import os.path
+
+import mrcfile  # type: ignore[import-untyped]
+import numpy as np
+
+from dragonET._make_video import _make_video
 
 
 def test_make_video(tmpdir):

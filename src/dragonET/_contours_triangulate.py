@@ -6,10 +6,11 @@
 # Author: James Parkhurst
 #
 from __future__ import annotations
+
 import typing
-import yaml
 
 import numpy as np
+import yaml
 from scipy.spatial.transform import Rotation
 
 if typing.TYPE_CHECKING:
@@ -62,17 +63,19 @@ def _contours_triangulate(
     """
 
     def read_points(filename) -> tuple:
-        print("Reading points from %s" % filename)
+        print(f"Reading points from {filename}")
         handle = np.load(filename)
         return handle["data"], handle["mask"], handle["octave"]
 
     def read_model(filename) -> dict:
-        print("Reading model from %s" % filename)
-        return yaml.safe_load(open(filename, "r"))
+        print(f"Reading model from {filename}")
+        with open(filename, "r") as f:
+            return yaml.safe_load(f)
 
     def write_points(filename, points):
-        print("Writing contours to %s" % filename)
-        np.savez(open(filename, "wb"), points=points)
+        print(f"Writing contours to {filename}")
+        with open(filename, "wb") as f:
+            np.savez(f, points=points)
 
     # Read the model
     model = read_model(model_in)
@@ -84,7 +87,7 @@ def _contours_triangulate(
     model["image_size"]
 
     # Read the points
-    data, mask, octave = read_points(contours_in)
+    data, mask, _ = read_points(contours_in)
 
     # Get the parameters
     dx = P[:, 0] + 0.5

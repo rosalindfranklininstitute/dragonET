@@ -6,6 +6,7 @@
 # Author: James Parkhurst
 #
 from __future__ import annotations
+
 import typing
 
 import mrcfile  # type: ignore[import-untyped]
@@ -27,15 +28,15 @@ def _generate_angles(
     """
 
     def read_projections(filename) -> MrcMemmap:
-        print("Reading projections from %s" % filename)
+        print(f"Reading projections from {filename}")
         return mrcfile.mmap(filename)
 
     def write_angles(filename, angles) -> None:
-        print("Write angles to %s" % filename)
+        print(f"Write angles to {filename}")
         with open(filename, "w") as outfile:
             for a in angles:
                 print(a)
-                outfile.write("%f\n" % a)
+                outfile.write(f"{a:f}\n")
 
     # Load the projections data
     projections_file = read_projections(projections_filename)

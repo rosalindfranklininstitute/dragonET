@@ -6,6 +6,7 @@
 # Author: James Parkhurst
 #
 from __future__ import annotations
+
 import typing
 
 import mrcfile  # type: ignore[import-untyped]
@@ -35,8 +36,7 @@ def rebin_stack(data: NDArray[_ArrayT], factor: int) -> NDArray[_ArrayT | np.flo
     if factor > 1:
         shape = np.array(data.shape) // np.array([1, factor, factor])
         print(
-            "Rebinning stack by factor %d from (%d, %d) -> (%d, %d)"
-            % (factor, data.shape[1], data.shape[2], shape[1], shape[2])
+            f"Rebinning stack by factor {factor:d} from ({data.shape[1]:d}, {data.shape[2]:d}) -> ({shape[1]:d}, {shape[2]:d})"
         )
         shape = (
             shape[0],
@@ -60,7 +60,7 @@ def _stack_rebin(
     """
 
     def read_projections(filename) -> NDArray[typing.Any]:
-        print("Reading projections from %s" % filename)
+        print(f"Reading projections from {filename}")
         data = mrcfile.mmap(filename).data
         if data is None:
             raise ValueError(f"No data in {filename}")
@@ -69,7 +69,7 @@ def _stack_rebin(
     def write_projections(
         projections: NDArray[typing.Any], filename: str | PathLike[str]
     ) -> None:
-        print("Writing projections to %s" % filename)
+        print(f"Writing projections to {filename}")
         handle = mrcfile.new(filename, overwrite=True)
         handle.set_data(projections)
 

@@ -6,18 +6,19 @@
 # Author: James Parkhurst
 #
 from __future__ import annotations
+
 import typing
-import yaml
 
 import astra  # type: ignore[import-untyped]
 import mrcfile  # type: ignore[import-untyped]
 import numpy as np
+import yaml
 from scipy.spatial.transform import Rotation
 
 if typing.TYPE_CHECKING:
     from os import PathLike
 
-    from numpy.typing import NDArray, ArrayLike
+    from numpy.typing import ArrayLike, NDArray
 
     SupportedDevices = typing.Literal["gpu", "gpu_and_host"]
 
@@ -81,7 +82,7 @@ def _prepare_astra_geometry(
         )
         return U, -np.asarray(axis_origin)
 
-    print("Preparing geometry with pixel size %f" % pixel_size)
+    print(f"Preparing geometry with pixel size {pixel_size:f}")
     assert all(np.array(image_size) > 0)
 
     # Prepare the transform to align the sample. The origin is wrt the centre
@@ -166,13 +167,13 @@ def _project_with_astra(
 
     # Check the device input
     if device not in ["gpu", "gpu_and_host", "host"]:
-        raise RuntimeError("Device must be 'gpu' or 'host', got %s" % device)
+        raise RuntimeError(f"Device must be 'gpu' or 'host', got {device}")
 
     # Create the projector object
     if device in ["gpu", "gpu_and_host"]:
         projector_id = astra.create_projector("cuda3d", proj_geom, vol_geom)
     else:
-        raise RuntimeError("Device type '%s' is not implemented")
+        raise RuntimeError(f"Device type '{device}' is not implemented")
 
     # Do the projection
     W = astra.OpTomo(projector_id)  # type: ignore
@@ -227,11 +228,11 @@ def _project(
     """
 
     def read_model(filename: str | PathLike[str]) -> typing.Any:
-        print("Reading model from %s" % filename)
+        print(f"Reading model from {filename}")
         return yaml.safe_load(open(filename))
 
     def read_volume(filename: str | PathLike[str]) -> NDArray[typing.Any]:
-        print("Reading volume from %s" % filename)
+        print(f"Reading volume from {filename}")
         data = mrcfile.mmap(filename).data
         if data is None:
             raise ValueError(f"No data in {filename}")
@@ -240,7 +241,7 @@ def _project(
     def write_projections(
         filename: str | PathLike[str], projections: NDArray[typing.Any]
     ) -> None:
-        print("Writing projections to %s" % filename)
+        print(f"Writing projections to {filename}")
         outfile = mrcfile.new(filename, overwrite=True)
         outfile.set_data(projections)
 

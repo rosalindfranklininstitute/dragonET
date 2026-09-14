@@ -1,9 +1,11 @@
 from __future__ import annotations
+
 import time
 import typing
+from argparse import ArgumentParser
 
 if typing.TYPE_CHECKING:
-    from argparse import ArgumentParser, Namespace
+    from argparse import Namespace
 
 
 NAME = "triangulate"

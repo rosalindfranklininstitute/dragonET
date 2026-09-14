@@ -6,9 +6,10 @@
 # Author: James Parkhurst
 #
 from __future__ import annotations
-import imageio
+
 import typing
 
+import imageio
 import mrcfile  # type: ignore[import-untyped]
 import numpy as np
 
@@ -35,8 +36,7 @@ def rebin_stack(data: NDArray[typing.Any], factor: int) -> NDArray[np.float32]:
     if factor > 1:
         shape = np.array(data.shape) // np.array([1, factor, factor])
         print(
-            "Rebinning stack by factor %d from (%d, %d) -> (%d, %d)"
-            % (factor, data.shape[1], data.shape[2], shape[1], shape[2])
+            f"Rebinning stack by factor {factor:d} from ({data.shape[1]:d}, {data.shape[2]:d}) -> ({shape[1]:d}, {shape[2]:d})"
         )
         temp_shape = (
             shape[1],

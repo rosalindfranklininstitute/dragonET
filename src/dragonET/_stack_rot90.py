@@ -6,6 +6,7 @@
 # Author: James Parkhurst
 #
 from __future__ import annotations
+
 import typing
 
 import mrcfile  # type: ignore[import-untyped]
@@ -28,7 +29,7 @@ def _stack_rot90(
     """
 
     def read_projections(filename: str | PathLike[str]) -> NDArray[typing.Any]:
-        print("Reading projections from %s" % filename)
+        print(f"Reading projections from {filename}")
         data = mrcfile.mmap(filename).data
         if data is None:
             raise ValueError(f"No data in {filename}")
@@ -37,7 +38,7 @@ def _stack_rot90(
     def write_projections(
         projections: NDArray[typing.Any], filename: str | PathLike[str]
     ) -> None:
-        print("Writing projections to %s" % filename)
+        print(f"Writing projections to {filename}")
         handle = mrcfile.new(filename, overwrite=True)
         handle.set_data(projections)
 

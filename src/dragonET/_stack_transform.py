@@ -6,12 +6,13 @@
 # Author: James Parkhurst
 #
 from __future__ import annotations
+
 import typing
-import yaml
 
 import mrcfile  # type: ignore[import-untyped]
 import numpy as np
 import scipy
+import yaml
 from scipy.spatial.transform import Rotation
 
 if typing.TYPE_CHECKING:
@@ -46,11 +47,12 @@ def _stack_transform(
     """
 
     def read_model(filename: str | PathLike[str]) -> typing.Any:
-        print("Reading model from %s" % filename)
-        return yaml.safe_load(open(filename))
+        print(f"Reading model from {filename}")
+        with open(filename) as f:
+            return yaml.safe_load(f)
 
     def read_projections(filename: str | PathLike[str]) -> NDArray[typing.Any]:
-        print("Reading projections from %s" % filename)
+        print(f"Reading projections from {filename}")
         data = mrcfile.mmap(filename).data
         if data is None:
             raise ValueError(f"No data in {filename}")
@@ -59,7 +61,7 @@ def _stack_transform(
     def write_projections(
         projections: NDArray[typing.Any], filename: str | PathLike[str]
     ) -> None:
-        print("Writing projections to %s" % filename)
+        print(f"Writing projections to {filename}")
         handle = mrcfile.new(filename, overwrite=True)
         handle.set_data(projections)
 

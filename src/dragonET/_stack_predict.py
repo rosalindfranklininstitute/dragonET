@@ -6,11 +6,12 @@
 # Author: James Parkhurst
 #
 from __future__ import annotations
+
 import typing
-import yaml
 
 import mrcfile  # type: ignore[import-untyped]
 import numpy as np
+import yaml
 from scipy.spatial.transform import Rotation
 
 import dragonET._reconstruct
@@ -123,7 +124,7 @@ def predict_stack(
         i0 = np.clip(j - subset_size, 0, data.shape[0])
         i1 = np.clip(j + subset_size + 1, 0, data.shape[0])
         select = np.concatenate([np.arange(i0, j), np.arange(j + 1, i1)])
-        print("Predicting image %d from images %d to %d" % (j, i0, i1))
+        print(f"Predicting image {j:d} from images {i0:d} to {i1:d}")
         result[j] = predict_image(data[select], P[select], P[j])
 
     # Return the result
@@ -142,20 +143,21 @@ def _stack_predict(
     """
 
     def read_projections(filename: str | PathLike[str]) -> NDArray[typing.Any]:
-        print("Reading projections from %s" % filename)
+        print(f"Reading projections from {filename}")
         data = mrcfile.mmap(filename).data
         if data is None:
             raise ValueError(f"No data in {filename}")
         return data
 
     def read_model(filename: str | PathLike[str]) -> typing.Any:
-        print("Reading model from %s" % filename)
-        return yaml.safe_load(open(filename))
+        print(f"Reading model from {filename}")
+        with open(filename) as f:
+            return yaml.safe_load(f)
 
     def write_projections(
         projections: NDArray[typing.Any], filename: str | PathLike[str]
     ) -> None:
-        print("Writing projections to %s" % filename)
+        print(f"Writing projections to {filename}")
         handle = mrcfile.new(filename, overwrite=True)
         handle.set_data(projections)
 

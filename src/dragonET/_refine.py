@@ -6,14 +6,15 @@
 # Author: James Parkhurst
 #
 from __future__ import annotations
+
 import os
 import typing
-import yaml
 
-import numpy as np
-import scipy.optimize
 import matplotlib
 import matplotlib.pyplot as plt
+import numpy as np
+import scipy.optimize
+import yaml
 from scipy.spatial.transform import Rotation
 
 matplotlib.use("Agg")
@@ -58,20 +59,11 @@ def residuals(
         Sj = np.linalg.inv(Rj.T @ Rj) @ Rj.T @ W0
         W1 = Rj @ Sj
         C += Sj
-        r.extend((W0 - W1))
+        r.extend(W0 - W1)
     r = np.array(r)
 
     print(
-        "First image: dx=%.5g, dy=%.5g, a=%.5g, b=%.5g, c=%.5g; RMSD=%.5g; Centering=%.5g"
-        % (
-            dx[0],
-            dy[0],
-            np.degrees(a[0]),
-            np.degrees(b[0]),
-            np.degrees(c[0]),
-            np.sqrt(np.mean(r**2)),
-            np.sqrt(np.mean((C / num_points) ** 2)),
-        )
+        f"First image: dx={dx[0]:.5g}, dy={dy[0]:.5g}, a={np.degrees(a[0]):.5g}, b={np.degrees(b[0]):.5g}, c={np.degrees(c[0]):.5g}; RMSD={np.sqrt(np.mean(r**2)):.5g}; Centering={np.sqrt(np.mean((C / num_points) ** 2)):.5g}"
     )
 
     # Add the centroids to the residuals
@@ -86,7 +78,7 @@ def penalties(parameters, active: NDArray[np.bool_], W, M, smoothness: float):
     Penalty functions
 
     """
-    dx, dy, a, b, c = parameters
+    _, _, a, b, c = parameters
 
     refine = "a"
     if np.count_nonzero(active[3, :]) > 0:
@@ -413,9 +405,9 @@ def refine_model(
 
     """
     if active is None or isinstance(active, str):
-        print("Refining model with %s restrained" % str(active))
+        print(f"Refining model with {active!s} restrained")
     else:
-        print("Refining model with %d parameters" % np.count_nonzero(active))
+        print(f"Refining model with {np.count_nonzero(active):d} parameters")
 
     def get_params_and_args(
         dx,
@@ -530,7 +522,7 @@ def refine_model(
     # Compute the RMSD
     rmsd = np.sqrt(result.cost / np.count_nonzero(mask))
 
-    print("RMSD: %f" % rmsd)
+    print(f"RMSD: {rmsd:f}")
 
     # Return the refined parameters and RMSD
     return dx, dy, a, b, c, rmsd
@@ -554,17 +546,18 @@ def _refine(
     """
 
     def read_points(filename: str | PathLike[str]) -> tuple:
-        print("Reading points from %s" % filename)
+        print(f"Reading points from {filename}")
         handle = np.load(filename)
         return handle["data"], handle["mask"]
 
     def read_model(filename: str | PathLike[str]) -> dict:
-        print("Reading model from %s" % filename)
+        print(f"Reading model from {filename}")
         return yaml.safe_load(open(filename, "r"))
 
     def write_model(model, filename: str | PathLike[str]) -> None:
-        print("Writing model to %s" % filename)
-        yaml.safe_dump(model, open(filename, "w"), default_flow_style=None)
+        print(f"Writing model to {filename}")
+        with open(filename, "w") as f:
+            yaml.safe_dump(model, f, default_flow_style=None)
 
     def write_angles_vs_image_number(
         P: NDArray[typing.Any], directory: str | PathLike[str]
@@ -622,7 +615,7 @@ def _refine(
         plt.close(fig)
 
     def write_plots(P: NDArray[typing.Any], directory: str | PathLike[str]) -> None:
-        print("Writing plots to %s" % directory)
+        print(f"Writing plots to {directory}")
         if not os.path.exists(directory):
             os.makedirs(directory)
         write_angles_vs_image_number(P, directory)
@@ -630,8 +623,9 @@ def _refine(
         write_xy_shift_distribution(P, directory)
 
     def write_info(info, filename: str | PathLike[str]) -> None:
-        print("Writing info to %s" % filename)
-        yaml.safe_dump(info, open(filename, "w"), default_flow_style=None)
+        print(f"Writing info to {filename}")
+        with open(filename, "w") as f:
+            yaml.safe_dump(info, f, default_flow_style=None)
 
     def get_cycles(fix: str | None) -> list[str] | list[str | None]:
         # Convert None to key "none"
@@ -655,8 +649,9 @@ def _refine(
         obs_per_image = np.count_nonzero(mask, axis=1)
         if np.any(obs_per_image < 3):
             raise RuntimeError(
-                "The following images have less than 4 observations: %s"
-                % ("\n".join(map(str, np.where(obs_per_image < 4)[0])))
+                "The following images have less than 4 observations: {:s}".format(
+                    "\n".join(map(str, np.where(obs_per_image < 4)[0]))
+                )
             )
 
     def check_obs_per_point(mask: NDArray[np.bool_]) -> None:
@@ -664,16 +659,17 @@ def _refine(
         obs_per_point = np.count_nonzero(mask, axis=0)
         if np.any(obs_per_point < 2):
             raise RuntimeError(
-                "The following points have less than 3 observations: %s"
-                % ("\n".join(map(str, np.where(obs_per_point < 2)[0])))
+                "The following points have less than 3 observations: {:s}".format(
+                    "\n".join(map(str, np.where(obs_per_point < 2)[0]))
+                )
             )
 
     def check_connections(mask: NDArray[np.bool_]) -> None:
         # Create lookup tables to check each point and each image is touched
-        r, n = scipy.ndimage.label(mask)
+        _, n = scipy.ndimage.label(mask)
         if n != 1:
             raise RuntimeError(
-                "All points and images are not connected: %d regions detected" % (n)
+                f"All points and images are not connected: {n:d} regions detected"
             )
 
     # Read the model
@@ -710,9 +706,9 @@ def _refine(
     check_obs_per_image(mask)
     check_obs_per_point(mask)
     # check_connections(mask)
-    print("Num images: %d" % num_images)
-    print("Num contours: %d" % num_points)
-    print("Num observations: %d" % np.count_nonzero(mask))
+    print(f"Num images: {num_images:d}")
+    print(f"Num contours: {num_points:d}")
+    print(f"Num observations: {np.count_nonzero(mask):d}")
 
     # Run through the cycles of refinement
     for active in get_cycles(fix):

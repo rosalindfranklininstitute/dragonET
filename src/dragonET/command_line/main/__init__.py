@@ -1,16 +1,17 @@
 from __future__ import annotations
+
 import typing
 
 from dragonET.command_line.main import (
-    new,
     align,
-    project,
-    refine,
-    reconstruct,
-    track,
-    make_video,
     generate_angles,
+    make_video,
+    new,
+    project,
+    reconstruct,
+    refine,
     run,
+    track,
 )
 
 if typing.TYPE_CHECKING:

@@ -1,8 +1,9 @@
 from __future__ import annotations
+
 import argparse
 import typing
 
-from dragonET.command_line import main, contours, stack, volume
+from dragonET.command_line import contours, main, stack, volume
 
 if typing.TYPE_CHECKING:
     from types import ModuleType

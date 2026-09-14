@@ -6,18 +6,21 @@
 # Author: James Parkhurst
 #
 from __future__ import annotations
+
 import typing
-import yaml
 
 import astra  # type: ignore[import-untyped]
 import mrcfile  # type: ignore[import-untyped]
 import numpy as np
+import yaml
 from scipy.spatial.transform import Rotation
 
 if typing.TYPE_CHECKING:
     from os import PathLike
 
     from numpy.typing import NDArray
+
+    SupportedDevices = typing.Literal["gpu", "gpu_and_host"]
 
 
 def _prepare_astra_geometry(
@@ -135,7 +138,7 @@ def _reconstruct_with_astra(
     vectors: NDArray[typing.Any],
     volume: NDArray[typing.Any],
     num_iterations: int = 1,
-    device: str = "gpu",
+    device: SupportedDevices = "gpu",
 ) -> NDArray[typing.Any]:
     """
     Do the reconstruction with astra
@@ -173,7 +176,7 @@ def _reconstruct_with_astra(
 
     # Check the device input
     if device not in ["gpu", "gpu_and_host", "host"]:
-        raise RuntimeError("Device must be 'gpu' or 'host', got %s" % device)
+        raise RuntimeError(f"Device must be 'gpu' or 'host', got {device}")
 
     # Create the projector object
     if device in ["gpu", "gpu_and_host"]:
@@ -242,7 +245,7 @@ def _reconstruct(
     volume_shape: tuple | None = None,
     pixel_size: float = 1,
     num_iterations: int = 1,
-    device: str = "gpu",
+    device: SupportedDevices = "gpu",
 ) -> None:
     """
     Do the reconstruction
@@ -260,11 +263,12 @@ def _reconstruct(
     """
 
     def read_model(filename: str | PathLike[str]) -> typing.Any:
-        print("Reading model from %s" % filename)
-        return yaml.safe_load(open(filename))
+        print(f"Reading model from {filename}")
+        with open(filename) as f:
+            return yaml.safe_load(f)
 
     def read_projections(filename: str | PathLike[str]) -> NDArray[typing.Any]:
-        print("Reading projections from %s" % filename)
+        print(f"Reading projections from {filename}")
         data = mrcfile.mmap(filename).data
         if data is None:
             raise ValueError(f"No data in {filename}")
@@ -274,20 +278,22 @@ def _reconstruct(
         filename: str | PathLike[str] | None, shape: int | tuple[int, ...]
     ) -> NDArray[typing.Any | np.float32]:
         if filename:
-            print("Reading initial volume from %s" % filename)
+            print(f"Reading initial volume from {filename}")
             data = mrcfile.open(filename).data
             if data is None:
                 raise ValueError(f"No data in {filename}")
             return np.asarray(data).copy()
         elif shape:
-            print("Initialising volume with shape: (%d, %d, %d)" % shape)
+            print(
+                f"Initialising volume with shape: ({shape[0]:d}, {shape[1]:d}, {shape[2]:d})"
+            )
             return np.zeros(shape, dtype=np.float32)
         raise ValueError("Failed to initialise volume, no filename or shape given")
 
     def write_volume(
         filename: str | PathLike[str], volume: NDArray[typing.Any]
     ) -> None:
-        print("Writing volume to %s" % filename)
+        print(f"Writing volume to {filename}")
         outfile = mrcfile.new(filename, overwrite=True)
         outfile.set_data(volume)
 

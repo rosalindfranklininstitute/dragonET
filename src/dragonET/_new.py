@@ -6,6 +6,7 @@
 # Author: James Parkhurst
 #
 from __future__ import annotations
+
 import typing
 
 import mrcfile  # type: ignore[import-untyped]
@@ -30,20 +31,21 @@ def _new(
     """
 
     def read_projections(filename: str | PathLike[str]) -> NDArray[typing.Any]:
-        print("Reading projections from %s" % filename)
+        print(f"Reading projections from {filename}")
         data = mrcfile.mmap(filename).data
         if data is None:
             raise ValueError(f"No data in {filename}")
         return data
 
     def read_angles(filename: str | PathLike[str]) -> NDArray[np.float64]:
-        print("Reading angles from %s" % filename)
+        print(f"Reading angles from {filename}")
         with open(filename) as f:
-            return np.asarray([float(_) for _ in f.readlines()], dtype=np.float64)
+            return np.asarray([float(_) for _ in f], dtype=np.float64)
 
     def write_model(filename: str | PathLike[str], model: typing.Any) -> None:
-        print("Writing model to %s" % filename)
-        yaml.safe_dump(model, open(filename, "w"), default_flow_style=None)
+        print(f"Writing model to {filename}")
+        with open(filename, "w") as f:
+            yaml.safe_dump(model, f, default_flow_style=None)
 
     # Load the projections data
     projections_data = read_projections(projections_filename)
