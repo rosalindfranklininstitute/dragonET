@@ -186,8 +186,13 @@ def _find_matching_features(
     )
 
     # Only bother if we have enough samples
+    transform = None
     try:
-        assert len(positions_i) >= min_samples, "Not enough features"
+        num_features = len(positions_i)
+        if num_features < min_samples:
+            raise ValueError(
+                f"Fewer features ({num_features}) than required (min_samples={min_samples})"
+            )
 
         # Compute the Euclidean transform
         transform, inliers = ransac(
@@ -200,11 +205,15 @@ def _find_matching_features(
 
         if not isinstance(transform, EuclideanTransform):
             raise TypeError("Failed to get transform")
-        elif not isinstance(inliers, list):
+        elif inliers is None:
             raise TypeError("Failed to get inliers")
 
         # Check the number of inliers
-        assert np.count_nonzero(inliers) >= min_samples
+        non_zero_inliers = np.count_nonzero(inliers)
+        if non_zero_inliers < min_samples:
+            raise ValueError(
+                f"Fewer non-zero inliers ({non_zero_inliers}) than required (min_samples={min_samples})"
+            )
 
         # Add the list of matches to a dictionary.
         for index in np.where(inliers)[0]:
@@ -214,10 +223,9 @@ def _find_matching_features(
 
         # matrix must be updated out of the loop,
         # but this should be not a significant slowdown
-    except Exception as e:  # noqa: BLE001
+    except (TypeError, ValueError) as e:
         print_exception(e)
         inliers = np.zeros(positions_i.shape[0], dtype=bool)
-        transform = None
 
     with print_lock:
         print(
