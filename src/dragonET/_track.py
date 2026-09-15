@@ -205,7 +205,7 @@ def _find_matching_features(
 
         if not isinstance(transform, EuclideanTransform):
             raise TypeError("Failed to get transform")
-        elif not isinstance(inliers, list):
+        elif inliers is None:
             raise TypeError("Failed to get inliers")
 
         # Check the number of inliers
