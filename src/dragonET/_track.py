@@ -186,6 +186,7 @@ def _find_matching_features(
     )
 
     # Only bother if we have enough samples
+    transform = None
     try:
         assert len(positions_i) >= min_samples, "Not enough features"
 
@@ -217,7 +218,6 @@ def _find_matching_features(
     except Exception as e:  # noqa: BLE001
         print_exception(e)
         inliers = np.zeros(positions_i.shape[0], dtype=bool)
-        transform = None
 
     with print_lock:
         print(
