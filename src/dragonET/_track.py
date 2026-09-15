@@ -96,7 +96,7 @@ def _detect_and_extract(
     with print_lock:
         # it's not projection.shape[0]
         print(
-            f"Extracted {len(descriptor_extractor.positions)}:d features from image {i + 1:d} / {counter:d}",
+            f"Extracted {len(descriptor_extractor.positions):d} features from image {i + 1:d} / {counter:d}",
             flush=True,
         )
 
