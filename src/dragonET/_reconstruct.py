@@ -345,7 +345,7 @@ def _reconstruct(
         volume,
         pixel_size,
         (axis[0], axis[1], axis[2]),
-        (axis_origin[0, axis_origin[1], axis_origin[2]]),
+        (axis_origin[0], axis_origin[1], axis_origin[2]),
         num_iterations,
         device,
     )
